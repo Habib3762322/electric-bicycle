@@ -1,0 +1,14 @@
+﻿# Files NOT to upload to GitHub
+*.wbk
+Manuscript-*.docx
+*.sav
+*.out.doc
+electric_bicycle_questionnaire.pdf
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS files
+Thumbs.db
+.DS_Store
