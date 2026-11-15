@@ -346,186 +346,118 @@ function renderDescriptiveStatistics() {
 /* ================================================================
    ۶. دیاگرام مسیر PLS-SEM (۵ سازه + ۸ فرضیه)
    ================================================================ */
+/* ================================================================
+   دیاگرام مسیر PLS-SEM (نسخه SVG)
+   ================================================================ */
 function drawL1PathDiagram() {
-  const c = themeColors();
-  const el = $('chart-l1-path');
+  const el = document.getElementById('chart-l1-path');
   if (!el) return;
 
-  // موقعیت سازه‌ها
-  const pos = {
-    DS:  [0.10, 0.50],  // استراتژی دیجیتال (چپ)
-    DTL: [0.30, 0.85],  // رهبری تحول (بالا-چپ)
-    DKM: [0.50, 0.50],  // مدیریت دانش (مرکز)
-    SA:  [0.70, 0.85],  // چابکی استراتژیک (بالا-راست)
-    DTS: [0.90, 0.50]   // موفقیت تحول (راست)
-  };
+  // پاکسازی هرگونه نمودار Plotly قبلی
+  try { Plotly.purge(el); } catch(e) {}
 
-  const labels = {
-    fa: { DS: 'استراتژی\nدیجیتال', DTL: 'رهبری\nتحول دیجیتال', DKM: 'مدیریت\nدانش دیجیتال', SA: 'چابکی\nاستراتژیک', DTS: 'موفقیت\nتحول دیجیتال' },
-    en: { DS: 'Digital\nStrategy', DTL: 'Digital\nLeadership', DKM: 'Knowledge\nManagement', SA: 'Strategic\nAgility', DTS: 'Digital\nSuccess' }
-  };
-  const L = labels[state.lang] || labels.fa;
+  // کد SVG نهایی
+  const svgCode = `
+    <svg viewBox="0 0 850 600" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%; max-height: 600px; display: block; margin: 0 auto; font-family: 'Vazirmatn', Tahoma, sans-serif; direction: rtl;">
+      
+      <defs>
+        <marker id="arrow-main" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b94a7" />
+        </marker>
+        <marker id="arrow-mod" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#e74c3c" />
+        </marker>
+        <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+          <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.2" />
+        </filter>
+      </defs>
 
-  const colors = {
-    DS:  '#e67e22',
-    DTL: '#3498db',
-    DKM: '#9b59b6',
-    SA:  '#f39c12',
-    DTS: '#27ae60'
-  };
+      <!-- خطوط -->
+      <g id="paths">
+        <!-- مسیرهای اصلی (ممتد) -->
+        <line x1="235.7" y1="346.7" x2="354.2" y2="225.3" stroke="#8b94a7" stroke-width="2.5" marker-end="url(#arrow-main)" />
+        <line x1="445.8" y1="225.3" x2="564.3" y2="346.7" stroke="#8b94a7" stroke-width="2.5" marker-end="url(#arrow-main)" />
+        <line x1="270" y1="400" x2="530" y2="400" stroke="#8b94a7" stroke-width="2.5" marker-end="url(#arrow-main)" />
 
-  // R² مقادیر (از article)
-  const r2 = {
-    DKM: (state.loaded.r2 || FALLBACK_R2).find(r => r.Construct === 'DKM')?.R2 || 0.182,
-    DTS: (state.loaded.r2 || FALLBACK_R2).find(r => r.Construct === 'DTS')?.R2 || 0.292
-  };
+        <!-- مسیرهای تعدیل‌گر (خط‌چین) -->
+        <line x1="150" y1="150" x2="295" y2="275" stroke="#e74c3c" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-mod)" />
+        <line x1="700" y1="150" x2="520" y2="310" stroke="#e74c3c" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-mod)" />
+      </g>
 
-  // مسیرهای اصلی (خط ممتد)
-  const mainPaths = [
-    { s: 'DS',  d: 'DKM', beta: 0.241, color: '#e67e22' },
-    { s: 'DS',  d: 'DTS', beta: 0.281, color: '#e67e22', curve: -0.15 },
-    { s: 'DKM', d: 'DTS', beta: 0.270, color: '#9b59b6' },
-    { s: 'DTL', d: 'DKM', beta: 0.342, color: '#3498db' },
-    { s: 'SA',  d: 'DTS', beta: 0.340, color: '#f39c12' }
-  ];
+      <!-- گره‌ها -->
+      <g id="nodes" filter="url(#shadow)">
+        <circle cx="200" cy="400" r="70" fill="#e67e22" />
+        <circle cx="400" cy="180" r="70" fill="#9b59b6" />
+        <circle cx="600" cy="400" r="70" fill="#27ae60" />
+        <rect x="80" y="80" width="140" height="70" rx="10" fill="#3498db" />
+        <rect x="630" y="80" width="140" height="70" rx="10" fill="#f39c12" />
+      </g>
 
-  // مسیرهای تعدیل‌گری (خط‌چین)
-  const modPaths = [
-    { s: 'DTL', d: 'DKM', beta: 0.071, color: '#e74c3c', dashed: true, curve: 0.2 },
-    { s: 'SA',  d: 'DTS', beta: 0.188, color: '#e74c3c', dashed: true, curve: 0.2 }
-  ];
+      <!-- متن گره‌ها و R² -->
+      <g id="node-texts" fill="#ffffff" font-size="15" font-weight="bold" text-anchor="middle" dominant-baseline="middle">
+        
+        <text x="400" y="180">
+          <tspan x="400" dy="-0.8em">مدیریت</tspan>
+          <tspan x="400" dy="1.4em">دانش</tspan>
+          <tspan x="400" dy="1.8em" font-size="12" font-weight="normal" fill="#f1c40f">R² = 0.182</tspan>
+        </text>
 
-  const traces = [];
-  const annotations = [];
+        <text x="200" y="400">
+          <tspan x="200" dy="-0.4em">استراتژی</tspan>
+          <tspan x="200" dy="1.4em">دیجیتال</tspan>
+        </text>
 
-  // رسم فلش با منحنی
-  function drawArrow(p1, p2, beta, color, dashed, curve) {
-    const [x1, y1] = p1;
-    const [x2, y2] = p2;
-    const dx = x2 - x1, dy = y2 - y1;
-    const len = Math.sqrt(dx * dx + dy * dy);
+        <text x="600" y="400">
+          <tspan x="600" dy="-0.8em">موفقیت تحول</tspan>
+          <tspan x="600" dy="1.4em">دیجیتال</tspan>
+          <tspan x="600" dy="1.8em" font-size="12" font-weight="normal" fill="#f1c40f">R² = 0.292</tspan>
+        </text>
 
-    // محاسبه نقطه شروع/پایان (با فاصله از مرکز گره)
-    const nodeR = 0.065;
-    const startX = x1 + (dx / len) * nodeR;
-    const startY = y1 + (dy / len) * nodeR;
-    const endX = x2 - (dx / len) * nodeR;
-    const endY = y2 - (dy / len) * nodeR;
+        <text x="150" y="115">
+          <tspan x="150" dy="-0.4em">رهبری تحول</tspan>
+          <tspan x="150" dy="1.4em">دیجیتال</tspan>
+        </text>
 
-    // رسم خط
-    traces.push({
-      type: 'scatter',
-      mode: 'lines',
-      x: [startX, endX],
-      y: [startY, endY],
-      line: {
-        color: color,
-        width: 2.5,
-        dash: dashed ? 'dash' : 'solid'
-      },
-      hoverinfo: 'skip',
-      showlegend: false
-    });
+        <text x="700" y="115">
+          <tspan x="700" dy="-0.4em">چابکی</tspan>
+          <tspan x="700" dy="1.4em">استراتژیک</tspan>
+        </text>
+      </g>
 
-    // افزودن فلش به انتها
-    annotations.push({
-      x: endX, y: endY,
-      ax: startX, ay: startY,
-      xref: 'x', yref: 'y', axref: 'x', ayref: 'y',
-      showarrow: true,
-      arrowhead: 3,
-      arrowsize: 1.2,
-      arrowwidth: 2.5,
-      arrowcolor: color,
-      text: ''
-    });
+      <!-- مقادیر بتا (β) -->
+      <g id="beta-values" font-size="13" font-weight="bold" font-family="Tahoma, sans-serif" text-anchor="middle" dominant-baseline="middle">
+        
+        <g transform="translate(285, 275)">
+          <rect x="-30" y="-12" width="60" height="24" rx="4" fill="#ffffff" opacity="0.95" filter="url(#shadow)" />
+          <text x="0" y="0" fill="#000000">β = 0.241</text>
+        </g>
 
-    // برچسب β در وسط (با انحراف منحنی)
-    const midX = (startX + endX) / 2;
-    const midY = (startY + endY) / 2;
-    const offsetY = curve ? curve * 0.15 : 0.06;
-    annotations.push({
-      x: midX,
-      y: midY + offsetY,
-      xref: 'x', yref: 'y',
-      showarrow: false,
-      text: `<b>${beta.toFixed(3)}</b>`,
-      bgcolor: dashed ? 'rgba(231,76,60,0.15)' : 'rgba(255,255,255,0.95)',
-      bordercolor: color,
-      borderwidth: 1.5,
-      borderpad: 4,
-      font: { size: 11, color: dashed ? '#c0392b' : '#000', family: 'Tahoma' }
-    });
-  }
+        <g transform="translate(515, 275)">
+          <rect x="-30" y="-12" width="60" height="24" rx="4" fill="#ffffff" opacity="0.95" filter="url(#shadow)" />
+          <text x="0" y="0" fill="#000000">β = 0.270</text>
+        </g>
 
-  // رسم مسیرهای اصلی
-  mainPaths.forEach(p => {
-    drawArrow(pos[p.s], pos[p.d], p.beta, p.color, false, p.curve);
-  });
+        <g transform="translate(400, 415)">
+          <rect x="-30" y="-12" width="60" height="24" rx="4" fill="#ffffff" opacity="0.95" filter="url(#shadow)" />
+          <text x="0" y="0" fill="#000000">β = 0.281</text>
+        </g>
 
-  // رسم مسیرهای تعدیل‌گری (خط‌چین)
-  modPaths.forEach(p => {
-    drawArrow(pos[p.s], pos[p.d], p.beta, p.color, true, p.curve);
-  });
+        <g transform="translate(220, 205)">
+          <rect x="-30" y="-12" width="60" height="24" rx="4" fill="#ffffff" opacity="0.95" filter="url(#shadow)" />
+          <text x="0" y="0" fill="#e74c3c">β = 0.071</text>
+        </g>
 
-  // رسم گره‌ها (دایره‌ها)
-  Object.entries(pos).forEach(([key, [x, y]]) => {
-    traces.push({
-      type: 'scatter',
-      mode: 'markers',
-      x: [x], y: [y],
-      marker: {
-        size: 80,
-        color: colors[key],
-        line: { color: '#fff', width: 3 },
-        symbol: 'circle'
-      },
-      hoverinfo: 'skip',
-      showlegend: false
-    });
+        <g transform="translate(620, 220)">
+          <rect x="-30" y="-12" width="60" height="24" rx="4" fill="#ffffff" opacity="0.95" filter="url(#shadow)" />
+          <text x="0" y="0" fill="#e74c3c">β = 0.188</text>
+        </g>
 
-    // برچسب سازه در مرکز
-    annotations.push({
-      x, y,
-      xref: 'x', yref: 'y',
-      showarrow: false,
-      text: L[key],
-      font: { size: 10, color: '#fff', family: 'Vazirmatn, Tahoma', weight: 'bold' },
-      align: 'center'
-    });
+      </g>
+    </svg>
+  `;
 
-    // R² برای سازه‌های درون‌زا
-    if (r2[key] != null) {
-      annotations.push({
-        x, y: y - 0.13,
-        xref: 'x', yref: 'y',
-        showarrow: false,
-        text: `<b>R² = ${r2[key].toFixed(3)}</b>`,
-        bgcolor: 'rgba(255,255,255,0.9)',
-        bordercolor: colors[key],
-        borderwidth: 1,
-        borderpad: 3,
-        font: { size: 10, color: '#000' }
-      });
-    }
-  });
-
-  Plotly.newPlot(el, traces, plotlyLayout({
-    xaxis: {
-      showgrid: false, zeroline: false, showticklabels: false,
-      range: [-0.05, 1.05], fixedrange: true
-    },
-    yaxis: {
-      showgrid: false, zeroline: false, showticklabels: false,
-      range: [-0.05, 1.05], fixedrange: true
-    },
-    annotations: annotations,
-    height: 620,
-    showlegend: false,
-    margin: { l: 20, r: 20, t: 20, b: 20 }
-  }), PLOTLY_CFG);
+  el.innerHTML = svgCode;
 }
-
 /* ================================================================
    ۷. نمودار میله‌ای βها
    ================================================================ */
