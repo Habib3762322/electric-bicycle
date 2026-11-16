@@ -788,11 +788,21 @@ async function loadDescriptive() {
    ۱۴. تابع اصلی
    ================================================================ */
 async function loadAllData() {
-  const [paths, r2, f2, loadings, quality, vifTable, reliability, plsPredict, monteCarlo, ml, descriptive, causalForest] = await Promise.all([
-    loadPaths(), loadR2(), loadF2(), loadLoadings(), loadQuality(),
-    loadVIFTable(), loadReliabilityTables(), loadPLSPredict(),
-    loadMonteCarlo(), loadML(), loadDescriptive(), loadCausalForest()
-  ]);
+  // دانلود ترتیبی (یکی‌یکی) برای جلوگیری از قطع شدن ارتباط در شبکه‌های ناپایدار
+  console.log('[Loader] Starting sequential data load...');
+  
+  const paths = await loadPaths();
+  const r2 = await loadR2();
+  const f2 = await loadF2();
+  const loadings = await loadLoadings();
+  const quality = await loadQuality();
+  const vifTable = await loadVIFTable();
+  const reliability = await loadReliabilityTables();
+  const plsPredict = await loadPLSPredict();
+  const monteCarlo = await loadMonteCarlo();
+  const ml = await loadML();
+  const descriptive = await loadDescriptive();
+  const causalForest = await loadCausalForest();
 
   const sources = {
     paths: paths.source, r2: r2.source, f2: f2.source,
@@ -815,7 +825,6 @@ async function loadAllData() {
     htmt: FALLBACK_HTMT, sources
   };
 }
-
 /* ================================================================
    ۱۹. Causal Forest — خواندن فایل اکسل
    ================================================================ */
