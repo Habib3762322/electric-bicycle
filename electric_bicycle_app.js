@@ -3898,12 +3898,7 @@ function renderChartsForActiveTab() {
       case 'smartpls-graphical':
         renderSmartPLSGraphics();
         break;
-      case 'causal-ml':
-        renderCausalMLSection();
-        break;
-         case 'causal-ml':
-          renderCausalMLSection();
-            break;
+      
     }
   } catch (e) {
     console.error('[App] Chart draw error for', id, ':', e);
