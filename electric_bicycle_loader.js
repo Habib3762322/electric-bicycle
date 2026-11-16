@@ -788,17 +788,18 @@ async function loadDescriptive() {
    ۱۴. تابع اصلی
    ================================================================ */
 async function loadAllData() {
-  const [paths, r2, f2, loadings, quality, vifTable, reliability, plsPredict, monteCarlo, ml, descriptive] = await Promise.all([
+  const [paths, r2, f2, loadings, quality, vifTable, reliability, plsPredict, monteCarlo, ml, descriptive, causalForest] = await Promise.all([
     loadPaths(), loadR2(), loadF2(), loadLoadings(), loadQuality(),
     loadVIFTable(), loadReliabilityTables(), loadPLSPredict(),
-    loadMonteCarlo(), loadML(), loadDescriptive()
+    loadMonteCarlo(), loadML(), loadDescriptive(), loadCausalForest()
   ]);
 
   const sources = {
     paths: paths.source, r2: r2.source, f2: f2.source,
     loadings: loadings.source, quality: quality.source, vifTable: vifTable.source,
     reliability: reliability.source, plsPredict: plsPredict.source,
-    monteCarlo: monteCarlo.source, ml: ml.source, descriptive: descriptive.source
+    monteCarlo: monteCarlo.source, ml: ml.source, descriptive: descriptive.source,
+    causalForest: causalForest.source
   };
 
   const excelCount = Object.values(sources).filter(s => s === 'excel').length;
@@ -810,6 +811,39 @@ async function loadAllData() {
     loadings: loadings.data, quality: quality.data, vifTable: vifTable.data,
     reliability: reliability.data, plsPredict: plsPredict.data,
     monteCarlo: monteCarlo.data, ml: ml.data, descriptive: descriptive.data,
+    causalForest: causalForest.data,
     htmt: FALLBACK_HTMT, sources
   };
+}
+
+/* ================================================================
+   ۱۹. Causal Forest — خواندن فایل اکسل
+   ================================================================ */
+async function loadCausalForest() {
+  try {
+    const wb = await readExcel('electric_bicycle_causal_forest.xlsx');
+    const result = {};
+    const sheets = ['Overview', 'CATE_Distribution', 'HG_Quartiles', 'Feature_Importance', 'Full_Data'];
+    let anyFound = false;
+    for (const sn of sheets) {
+      if (wb.Sheets[sn]) {
+        result[sn] = XLSX.utils.sheet_to_json(wb.Sheets[sn], { defval: null });
+        anyFound = true;
+      }
+    }
+    if (!anyFound) throw new Error('No sheets');
+
+    // تبدیل Overview از [{Metric, Value}] به آبجکت
+    if (result.Overview) {
+      const ovObj = {};
+      result.Overview.forEach(row => { if (row.Metric) ovObj[row.Metric] = row.Value; });
+      result.OverviewObj = ovObj;
+    }
+
+    console.log('[Loader] ✅ Causal Forest:', Object.keys(result).length, 'sheets');
+    return { data: result, source: 'excel' };
+  } catch (e) {
+    console.warn('[Loader] Causal Forest fallback:', e.message);
+    return { data: FALLBACK_CAUSAL_FOREST, source: 'fallback' };
+  }
 }

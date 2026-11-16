@@ -1779,3 +1779,149 @@ html[data-theme="light"] .interp-item {
   body { background: #fff; color: #000; }
   .chart-card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
 }
+/* ================================================================
+   جدول فرضیه‌ها — Tooltip شناور
+   ================================================================ */
+.table-tooltip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  display: none;
+  max-width: 420px;
+  min-width: 280px;
+  background: #0a0e18;
+  color: #e8ecf1;
+  border: 1px solid #3498db;
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 12.5px;
+  line-height: 1.9;
+  direction: rtl;
+  text-align: right;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(52, 152, 219, 0.2);
+  pointer-events: none;
+  font-family: 'Vazirmatn', Tahoma, sans-serif;
+  animation: tooltipFadeIn 0.15s ease-out;
+}
+
+@keyframes tooltipFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.table-tooltip strong {
+  color: #f39c12;
+  font-weight: 700;
+}
+
+.table-tooltip em {
+  color: #27ae60;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.table-tooltip .tooltip-title {
+  display: block;
+  color: #5dade2;
+  font-weight: 800;
+  font-size: 13.5px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #2d3446;
+}
+
+.table-tooltip .reason-text {
+  background: rgba(52, 152, 219, 0.1);
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-top: 10px;
+  border-right: 3px solid #3498db;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+/* حالت روشن */
+html[data-theme="light"] .table-tooltip {
+  background: #ffffff;
+  color: #2c3e50;
+  border-color: #3498db;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(52, 152, 219, 0.15);
+}
+
+html[data-theme="light"] .table-tooltip .tooltip-title {
+  border-bottom-color: #dee2e6;
+}
+
+html[data-theme="light"] .table-tooltip .reason-text {
+  background: rgba(52, 152, 219, 0.08);
+}
+/* ================================================================
+   SmartPLS Graphical Output
+   ================================================================ */
+.smartpls-gallery {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+}
+
+.smartpls-figure {
+  background: var(--card);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 24px rgba(0,0,0,.18);
+  overflow: hidden;
+}
+
+.smartpls-figure-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, rgba(52,152,219,.12), rgba(155,89,182,.06));
+  border-bottom: 1px solid var(--border);
+}
+
+.smartpls-fig-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #3498db, #9b59b6);
+  color: #fff;
+  font-weight: 900;
+  font-size: 15px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.smartpls-fig-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.smartpls-fig-body {
+  padding: 0;
+  background: var(--plot-bg);
+}
+
+.smartpls-fig-body .plot {
+  min-height: 600px;
+  background: var(--plot-bg);
+}
+
+.smartpls-fig-foot {
+  padding: 10px 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-style: italic;
+}
+
+@media (max-width: 900px) {
+  .smartpls-fig-body .plot { min-height: 400px; }
+}

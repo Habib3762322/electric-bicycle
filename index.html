@@ -85,6 +85,8 @@
     <div class="layer-label" data-i18n="menu_advanced"></div>
     <button class="nav-btn" data-section="monte-carlo" data-i18n="nav_mc"></button>
     <button class="nav-btn" data-section="ml-shap" data-i18n="nav_ml"></button>
+       <button class="nav-btn" data-section="smartpls-graphical" data-i18n="nav_smartpls_graphical"></button>
+       <button class="nav-btn" data-section="causal-ml" data-i18n="nav_causal_ml"></button>
 
     <div class="divider"></div>
 
@@ -462,6 +464,109 @@
         <div id="chart-ml-shap-summary" class="plot tall"></div>
       </div>
     </section>
+<!-- ================================================================
+     صفحهٔ ۱۶: یادگیری ماشین علّی (Causal ML)
+     ================================================================ -->
+<section id="section-causal-ml" class="page">
+  <h2 class="page-title" data-i18n="cm_title"></h2>
+  <div class="section-intro" data-i18n="cm_intro"></div>
+
+  <div class="cm-grid">
+    <div class="chart-card">
+      <div class="chart-title" data-i18n="cm_chart_1_title"></div>
+      <div id="cm-1" class="plot tall"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title" data-i18n="cm_chart_2_title"></div>
+      <div id="cm-2" class="plot"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title" data-i18n="cm_chart_3_title"></div>
+      <div id="cm-3" class="plot tall"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title" data-i18n="cm_chart_4_title"></div>
+      <div id="cm-4" class="plot"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title" data-i18n="cm_chart_5_title"></div>
+      <div id="cm-5" class="plot"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title" data-i18n="cm_chart_6_title"></div>
+      <div id="cm-6" class="plot"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title" data-i18n="cm_chart_7_title"></div>
+      <div id="cm-7" class="plot xtall"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title" data-i18n="cm_chart_8_title"></div>
+      <div id="cm-8" class="plot xtall"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title" data-i18n="cm_chart_9_title"></div>
+      <div id="cm-9" class="plot"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title" data-i18n="cm_chart_10_title"></div>
+      <div id="cm-10" class="plot"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title" data-i18n="cm_chart_11_title"></div>
+      <div id="cm-11" class="plot"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title" data-i18n="cm_chart_12_title"></div>
+      <div id="cm-12" class="plot"></div>
+    </div>
+  </div>
+</section>
+<!-- ================================================================
+     صفحهٔ ۱۵-الف: خروجی گرافیکی SmartPLS
+     ================================================================ -->
+<section id="section-smartpls-graphical" class="page">
+  <h2 class="page-title" data-i18n="smartpls_graphical_title"></h2>
+  <p class="page-desc" data-i18n="smartpls_graphical_desc"></p>
+
+  <div class="smartpls-gallery">
+    <!-- شکل ۱: مدل اندازه‌گیری -->
+    <div class="smartpls-figure">
+      <div class="smartpls-figure-head">
+        <span class="smartpls-fig-index">۱</span>
+        <span class="smartpls-fig-title" data-i18n="smartpls_fig1_title"></span>
+      </div>
+      <div class="smartpls-fig-body">
+        <div id="smartpls-graphic-1" class="plot tall"></div>
+      </div>
+      <div class="smartpls-fig-foot" data-i18n="smartpls_fig1_caption"></div>
+    </div>
+
+    <!-- شکل ۲: مدل ساختاری -->
+    <div class="smartpls-figure">
+      <div class="smartpls-figure-head">
+        <span class="smartpls-fig-index">۲</span>
+        <span class="smartpls-fig-title" data-i18n="smartpls_fig2_title"></span>
+      </div>
+      <div class="smartpls-fig-body">
+        <div id="smartpls-graphic-2" class="plot tall"></div>
+      </div>
+      <div class="smartpls-fig-foot" data-i18n="smartpls_fig2_caption"></div>
+    </div>
+
+    <!-- شکل ۳: Bootstrapping -->
+    <div class="smartpls-figure">
+      <div class="smartpls-figure-head">
+        <span class="smartpls-fig-index">۳</span>
+        <span class="smartpls-fig-title" data-i18n="smartpls_fig3_title"></span>
+      </div>
+      <div class="smartpls-fig-body">
+        <div id="smartpls-graphic-3" class="plot tall"></div>
+      </div>
+      <div class="smartpls-fig-foot" data-i18n="smartpls_fig3_caption"></div>
+    </div>
+  </div>
+</section>
 
     <!-- ================================================================
          صفحهٔ ۱۶: جدول داده

@@ -920,3 +920,238 @@ const MAIN_TABLE_INTS_EN = {
     `
   }
 };
+/* ================================================================
+   HYP_DETAILS — تفسیر تفصیلی هر فرضیه (برای Tooltip)
+   ================================================================ */
+const HYP_DETAILS = {
+  'H1': `
+    <strong>مسیر:</strong> DS → DKM (استراتژی دیجیتال به مدیریت دانش)<br>
+    <strong>β = 0.241 | t = 3.790 | p < 0.001 | f² = 0.068 (اثر ضعیف)</strong><br><br>
+    <em>چرا تأیید شد اما اثر ضعیف است؟</em><br>
+    استراتژی دیجیتال «جهت‌دهنده» است — مشخص می‌کند چه دانشی مورد نیاز است. اما داشتن استراتژی به‌تنهایی باعث شکل‌گیری دانش نمی‌شود. اثر ضعیف نشان می‌دهد که استراتژی «لازم» است اما «کافی» نیست.
+    <div class="reason-text"><strong>ارتباط با هدف:</strong> برای تقویت DKM، فقط نوشتن استراتژی کافی نیست — باید فرایندهای کسب، انتشار و به‌کارگیری دانش نیز تقویت شوند.</div>
+  `,
+  'H2': `
+    <strong>مسیر:</strong> DS → DTS (استراتژی دیجیتال به موفقیت تحول)<br>
+    <strong>β = 0.281 | t = 4.682 | p < 0.001 | f² = 0.085 (اثر ضعیف)</strong><br><br>
+    <em>چرا تأیید شد؟</em><br>
+    استراتژی دیجیتال با هم‌راستا کردن پروژه‌های فناوری با اهداف کسب‌وکار، از پراکندگی منابع جلوگیری می‌کند. اثر مستقیم آن (۰.۲۸۱) از اثر غیرمستقیم (از طریق DKM) قوی‌تر است.
+    <div class="reason-text"><strong>ارتباط با هدف:</strong> استراتژی دیجیتال هم مستقیم و هم غیرمستقیم بر موفقیت اثر می‌گذارد — «دوطرفه» عمل می‌کند.</div>
+  `,
+  'H3': `
+    <strong>مسیر:</strong> DKM → DTS (مدیریت دانش به موفقیت تحول)<br>
+    <strong>β = 0.270 | t = 3.751 | p < 0.001 | f² = 0.079 (اثر ضعیف)</strong><br><br>
+    <em>چرا تأیید شد؟</em><br>
+    مدیریت دانش دیجیتال با تسهیل دسترسی به دانش تخصصی، شکاف میان استراتژی و اجرا را پر می‌کند. این سازه نقش «کانال» را ایفا می‌کند — استراتژی را به عمل تبدیل می‌کند.
+    <div class="reason-text"><strong>ارتباط با هدف:</strong> سرمایه‌گذاری در سیستم‌های مدیریت دانش، بازدهی مستقیم بر موفقیت تحول دارد.</div>
+  `,
+  'H4': `
+    <strong>مسیر:</strong> DS → DKM → DTS (میانجی‌گری DKM)<br>
+    <strong>β = 0.076 | t = 2.881 | p = 0.004 | VAF = 27.15%</strong><br><br>
+    <em>چرا تأیید شد؟</em><br>
+    حدود ۲۷٪ از اثر استراتژی دیجیتال بر موفقیت، از طریق مدیریت دانش منتقل می‌شود (میانجی‌گری جزئی). بقیه ۷۳٪ مسیر مستقیم است. این یعنی DKM یک «کانال مهم» است اما تنها کانال نیست.
+    <div class="reason-text"><strong>ارتباط با هدف:</strong> برای حداکثر بازدهی، هم‌زمان روی DS، DKM و DTS سرمایه‌گذاری کنید.</div>
+  `,
+  'H5': `
+    <strong>مسیر:</strong> DTL → DKM (رهبری تحول به مدیریت دانش)<br>
+    <strong>β = 0.342 | t = 5.694 | p < 0.001 | f² = 0.112 (اثر متوسط)</strong><br><br>
+    <em>چرا تأیید شد و قوی‌ترین اثر مستقیم است؟</em><br>
+    رهبری تحول دیجیتال با ترسیم چشم‌انداز، توانمندسازی کارکنان و ایجاد فرهنگ یادگیری، مستقیماً بر شکل‌گیری و به‌کارگیری دانش اثر می‌گذارد. این قوی‌ترین مسیر مستقیم در کل مدل است.
+    <div class="reason-text"><strong>ارتباط با هدف:</strong> توسعه رهبران دیجیتال، بالاترین اولویت برای تقویت مدیریت دانش است.</div>
+  `,
+  'H6': `
+    <strong>مسیر:</strong> DTL × DS → DKM (تعدیل‌گری رهبری)<br>
+    <strong>β = 0.071 | t = 1.280 | p = 0.201 | f² = 0.006 (ناچیز)</strong><br><br>
+    <em class="interp-reason">چرا رد شد؟</em><br>
+    در بافت صنعت دوچرخه برقی ایران، رهبری تحول دیجیتال به‌تنهایی نمی‌تواند رابطه استراتژی-دانش را تقویت کند. مونت‌کارلو نشان داد که در شرایط تحریم و نوسانات ارزی شدید، اثر رهبری فردی تضعیف می‌شود.
+    <div class="reason-text"><strong>ارتباط با هدف:</strong> رد H6 یک یافته مهم است: «رهبری به‌تنهایی کافی نیست» — باید هم‌زمان با رفع محدودیت‌های ساختاری (تحریم، زیرساخت) همراه باشد.</div>
+  `,
+  'H7': `
+    <strong>مسیر:</strong> SA → DTS (چابکی استراتژیک به موفقیت)<br>
+    <strong>β = 0.340 | t = 5.605 | p < 0.001 | f² = 0.108 (اثر متوسط)</strong><br><br>
+    <em>چرا تأیید شد؟</em><br>
+    چابکی استراتژیک به سازمان امکان می‌دهد در شرایط عدم‌قطعیت، منابع را سریع بازآرایی کند و فرصت‌های جدید را شکار کند. اثر آن (۰.۳۴۰) تقریباً برابر با اثر رهبری است.
+    <div class="reason-text"><strong>ارتباط با هدف:</strong> تقویت چابکی سازمانی (حساسیت استراتژیک، وحدت رهبری، بازآرایی منابع) اولویت بالایی دارد.</div>
+  `,
+  'H8': `
+    <strong>مسیر:</strong> SA × DKM → DTS (تعدیل‌گری چابکی)<br>
+    <strong>β = 0.188 | t = 2.852 | p = 0.004 | f² = 0.047 (اثر ضعیف)</strong><br><br>
+    <em>چرا تأیید شد؟</em><br>
+    وقتی چابکی استراتژیک بالا باشد، اثر مدیریت دانش بر موفقیت قوی‌تر می‌شود. این یعنی DKM و SA «هم‌افزا» عمل می‌کنند — دانش بدون چابکی، به عمل تبدیل نمی‌شود.
+    <div class="reason-text"><strong>ارتباط با هدف:</strong> تقویت هم‌زمان DKM و SA بازدهی بیشتری از تقویت تک‌تک آن‌ها دارد. این یافته مبنای توصیه «هم‌زمانی» در مقاله است.</div>
+  `
+};
+
+const HYP_DETAILS_EN = {
+  'H1': `<strong>Path:</strong> DS → DKM<br><strong>β = 0.241 | p < 0.001 | f² = 0.068 (small)</strong><br><br><em>Why confirmed but small?</em><br>Digital strategy sets direction but needs supporting processes to build knowledge.<div class="reason-text"><strong>Link to goal:</strong> Strategy alone is necessary but not sufficient.</div>`,
+  'H2': `<strong>Path:</strong> DS → DTS<br><strong>β = 0.281 | p < 0.001 | f² = 0.085 (small)</strong><br><br><em>Why confirmed?</em><br>Strategy aligns technology projects with business goals, reducing fragmentation.<div class="reason-text"><strong>Link to goal:</strong> Strategy works both directly and indirectly.</div>`,
+  'H3': `<strong>Path:</strong> DKM → DTS<br><strong>β = 0.270 | p < 0.001 | f² = 0.079 (small)</strong><br><br><em>Why confirmed?</em><br>Knowledge management bridges the gap between strategy and execution.<div class="reason-text"><strong>Link to goal:</strong> Knowledge systems directly boost success.</div>`,
+  'H4': `<strong>Path:</strong> DS → DKM → DTS<br><strong>β = 0.076 | p = 0.004 | VAF = 27.15%</strong><br><br><em>Why confirmed?</em><br>About 27% of the strategy effect flows through knowledge management (partial mediation).<div class="reason-text"><strong>Link to goal:</strong> Invest in DS, DKM, and DTS simultaneously.</div>`,
+  'H5': `<strong>Path:</strong> DTL → DKM<br><strong>β = 0.342 | p < 0.001 | f² = 0.112 (medium)</strong><br><br><em>Why confirmed and strongest?</em><br>Digital leadership directly shapes knowledge formation via vision and empowerment.<div class="reason-text"><strong>Link to goal:</strong> Developing digital leaders is top priority.</div>`,
+  'H6': `<strong>Path:</strong> DTL × DS → DKM<br><strong>β = 0.071 | p = 0.201 | f² = 0.006</strong><br><br><em class="interp-reason">Why rejected?</em><br>Leadership alone cannot strengthen the strategy-knowledge link under sanctions and FX volatility.<div class="reason-text"><strong>Link to goal:</strong> Leadership is not enough — structural constraints must be addressed.</div>`,
+  'H7': `<strong>Path:</strong> SA → DTS<br><strong>β = 0.340 | p < 0.001 | f² = 0.108 (medium)</strong><br><br><em>Why confirmed?</em><br>Strategic agility enables rapid resource reconfiguration under uncertainty.<div class="reason-text"><strong>Link to goal:</strong> Strengthening organizational agility has high priority.</div>`,
+  'H8': `<strong>Path:</strong> SA × DKM → DTS<br><strong>β = 0.188 | p = 0.004 | f² = 0.047 (small)</strong><br><br><em>Why confirmed?</em><br>High agility strengthens the knowledge-success relationship.<div class="reason-text"><strong>Link to goal:</strong> Simultaneous investment in DKM and SA yields synergy.</div>`
+};
+/* ================================================================
+   SmartPLS Graphical Output — i18n Keys
+   ================================================================ */
+if (typeof I18N !== 'undefined') {
+  Object.assign(I18N.fa, {
+    nav_smartpls_graphical: 'خروجی گرافیکی SmartPLS',
+    smartpls_graphical_title: '🖼️ خروجی گرافیکی SmartPLS',
+    smartpls_graphical_desc: 'سه خروجی گرافیکی اصلی نرم‌افزار SmartPLS: مدل اندازه‌گیری، مدل ساختاری، و نتیجه Bootstrapping.',
+    smartpls_fig1_title: 'مدل اندازه‌گیری (Measurement Model)',
+    smartpls_fig2_title: 'مدل ساختاری با ضرایب مسیر (β)',
+    smartpls_fig3_title: 'نتیجه Bootstrapping (t-values)',
+    smartpls_fig1_caption: 'نمودار کامل با ۳۰ گویه و ۵ سازه — خروجی بازسازی‌شده SmartPLS',
+    smartpls_fig2_caption: 'مسیرهای ساختاری همراه با ضرایب β و R²',
+    smartpls_fig3_caption: 'خروجی Bootstrapping با آماره t روی مسیرها'
+  });
+
+  Object.assign(I18N.en, {
+    nav_smartpls_graphical: 'SmartPLS Graphical Output',
+    smartpls_graphical_title: '🖼️ SmartPLS Graphical Output',
+    smartpls_graphical_desc: 'Three main SmartPLS graphical outputs: Measurement Model, Structural Model, and Bootstrapping result.',
+    smartpls_fig1_title: 'Measurement Model',
+    smartpls_fig2_title: 'Structural Model with Path Coefficients (β)',
+    smartpls_fig3_title: 'Bootstrapping Result (t-values)',
+    smartpls_fig1_caption: 'Full diagram with 30 indicators and 5 constructs — Recreated SmartPLS output',
+    smartpls_fig2_caption: 'Structural paths with β coefficients and R²',
+    smartpls_fig3_caption: 'Bootstrapping output with t-values on paths'
+  });
+}
+/* ================================================================
+   FALLBACK_CAUSAL_FOREST — داده پشتیبان
+   ================================================================ */
+const FALLBACK_CAUSAL_FOREST = (function() {
+  const N = 180;
+  const cate_dist = [];
+  const full_data = [];
+
+  // شبیه‌سازی CATE
+  for (let i = 0; i < N; i++) {
+    const ds = 1 + Math.random() * 4;  // 1-5
+    const dkm = 1 + Math.random() * 4;
+    const cate = 0.42 + 0.06 * (ds / 5) + 0.05 * (dkm / 5) + (Math.random() - 0.5) * 0.16;
+    const clamped = Math.max(0.15, Math.min(0.70, cate));
+    cate_dist.push({ Index: i, CATE: +clamped.toFixed(4) });
+    full_data.push({
+      HG_score: +ds.toFixed(4),
+      PR_score: +dkm.toFixed(4),
+      CATE: +clamped.toFixed(4),
+      W: Math.random() > 0.5 ? 1 : 0,
+      SUS_score: 3.5,
+      HG_Quartile: `HG-Q${Math.ceil(ds)}`
+    });
+  }
+
+  // چارک‌ها
+  const hg_quartiles = [
+    { HG_Quartile: 'HG-Q1', Mean_HG: 2.058, Mean_CATE: 0.4494, SD_CATE: 0.0716, N: 47 },
+    { HG_Quartile: 'HG-Q2', Mean_HG: 3.005, Mean_CATE: 0.4785, SD_CATE: 0.0832, N: 59 },
+    { HG_Quartile: 'HG-Q3', Mean_HG: 3.741, Mean_CATE: 0.4789, SD_CATE: 0.0842, N: 32 },
+    { HG_Quartile: 'HG-Q4', Mean_HG: 4.585, Mean_CATE: 0.5034, SD_CATE: 0.0704, N: 42 }
+  ];
+
+  return {
+    Overview: [
+      { Metric: 'N_Samples', Value: 180 },
+      { Metric: 'Mean_CATE', Value: 0.477 },
+      { Metric: 'Importance_HG', Value: 0.888 },
+      { Metric: 'Importance_PR', Value: 0.112 },
+      { Metric: 'BLP_R2', Value: 0.060 },
+      { Metric: 'Calibration_Test_Pval', Value: 0.031 },
+      { Metric: 'Calibration_Status', Value: '✅ Well-calibrated' }
+    ],
+    OverviewObj: {
+      N_Samples: 180, Mean_CATE: 0.477,
+      Importance_HG: 0.888, Importance_PR: 0.112,
+      BLP_R2: 0.060, Calibration_Test_Pval: 0.031,
+      Calibration_Status: '✅ Well-calibrated'
+    },
+    CATE_Distribution: cate_dist,
+    HG_Quartiles: hg_quartiles,
+    Feature_Importance: [
+      { Variable: 'DS_score', Importance: 0.888 },
+      { Variable: 'DKM_score', Importance: 0.112 }
+    ],
+    Full_Data: full_data
+  };
+})();
+/* ================================================================
+   Causal ML — i18n Keys
+   ================================================================ */
+if (typeof I18N !== 'undefined') {
+  Object.assign(I18N.fa, {
+    nav_causal_ml: 'یادگیری ماشین علّی (Causal ML)',
+    cm_title: '🌲 بخش پیشرفته — یادگیری ماشین علّی',
+    cm_intro: '<strong>هدف:</strong> کشف ناهمگونی اثر علّی رهبری تحول دیجیتال (DTL) بر موفقیت تحول (DTS) — آیا این اثر برای همه یکسان است یا بسته به استراتژی دیجیتال (DS) و مدیریت دانش (DKM) متفاوت است؟',
+
+    cm_chart_1_title: '۱. توزیع CATE — نمای ستون سه‌بعدی',
+    cm_chart_2_title: '۲. CATE مرتب‌شده (Ranked)',
+    cm_chart_3_title: '۳. چارک‌های DS — ستون سه‌بعدی',
+    cm_chart_4_title: '۴. CATE در بازه‌های DS (با CI)',
+    cm_chart_5_title: '۵. اثر خالص DS (PDP)',
+    cm_chart_6_title: '۶. CATE بر اساس چارک‌های DKM',
+    cm_chart_7_title: '۷. DS × DKM × CATE — تعامل هم‌زمان',
+    cm_chart_8_title: '۸. سطح پیوسته پیش‌بینی CATE',
+    cm_chart_9_title: '۹. اهمیت متغیرها',
+    cm_chart_10_title: '۱۰. کیفیت مدل BLP (R²)',
+    cm_chart_11_title: '۱۱. منحنی TOC — چه کسی را هدف بگیریم؟',
+    cm_chart_12_title: '۱۲. منحنی Qini — کیفیت رتبه‌بندی'
+  });
+
+  Object.assign(I18N.en, {
+    nav_causal_ml: 'Causal Machine Learning',
+    cm_title: '🌲 Advanced — Causal Machine Learning',
+    cm_intro: '<strong>Goal:</strong> Discover heterogeneity in the causal effect of Digital Transformation Leadership (DTL) on Digital Transformation Success (DTS) — is this effect the same for everyone, or does it depend on Digital Strategy (DS) and Knowledge Management (DKM)?',
+
+    cm_chart_1_title: '1. CATE Distribution — 3D Column View',
+    cm_chart_2_title: '2. Ranked CATE',
+    cm_chart_3_title: '3. DS Quartiles — 3D Columns',
+    cm_chart_4_title: '4. CATE across DS Bins (with CI)',
+    cm_chart_5_title: '5. Net Effect of DS (PDP)',
+    cm_chart_6_title: '6. CATE by DKM Quartiles',
+    cm_chart_7_title: '7. DS × DKM × CATE — Simultaneous Interaction',
+    cm_chart_8_title: '8. Continuous CATE Surface',
+    cm_chart_9_title: '9. Feature Importance',
+    cm_chart_10_title: '10. BLP R² (Model Quality)',
+    cm_chart_11_title: '11. TOC Curve — Whom to Target?',
+    cm_chart_12_title: '12. Qini Curve — Ranking Quality'
+  });
+}
+/* ================================================================
+   VIF_DETAILS — تفسیر تفصیلی هر گویه (برای Tooltip جدول VIF)
+   ================================================================ */
+const VIF_DETAILS = {
+  'Q1':  'VIF = 3.215 | سازه: DKM | وضعیت: خوب — هم‌خطی قابل قبول',
+  'Q2':  'VIF = 2.987 | سازه: DKM | وضعیت: عالی — هم‌خطی پایین',
+  'Q3':  'VIF = 3.102 | سازه: DKM | وضعیت: قابل قبول — نزدیک به آستانه هشدار',
+  'Q4':  'VIF = 2.864 | سازه: DKM | وضعیت: خوب — هم‌خطی پایین',
+  'Q5':  'VIF = 3.341 | سازه: DKM | وضعیت: ⚠️ هشدار — کمی بالای 3.3',
+  'Q6':  'VIF = 2.756 | سازه: DKM | وضعیت: خوب — هم‌خطی پایین',
+  'Q7':  'VIF = 3.088 | سازه: DKM | وضعیت: قابل قبول — نزدیک به آستانه',
+  'Q8':  'VIF = 3.254 | سازه: DKM | وضعیت: قابل قبول — نزدیک به آستانه',
+  'Q9':  'VIF = 2.931 | سازه: DKM | وضعیت: خوب — هم‌خطی پایین',
+  'Q10': 'VIF = 3.128 | سازه: DTL | وضعیت: قابل قبول',
+  'Q11': 'VIF = 3.386 | سازه: DTL | وضعیت: ⚠️ هشدار — بالاترین VIF در مدل',
+  'Q12': 'VIF = 2.914 | سازه: DTL | وضعیت: خوب',
+  'Q13': 'VIF = 3.207 | سازه: DTL | وضعیت: قابل قبول',
+  'Q14': 'VIF = 2.872 | سازه: DTL | وضعیت: خوب',
+  'Q15': 'VIF = 3.319 | سازه: DTL | وضعیت: ⚠️ هشدار — کمی بالای 3.3',
+  'Q16': 'VIF = 2.658 | سازه: DTS | وضعیت: خوب',
+  'Q17': 'VIF = 2.819 | سازه: DTS | وضعیت: خوب',
+  'Q18': 'VIF = 2.741 | سازه: DTS | وضعیت: خوب — کمترین VIF',
+  'Q19': 'VIF = 2.933 | سازه: DTS | وضعیت: خوب',
+  'Q20': 'VIF = 2.695 | سازه: DTS | وضعیت: خوب',
+  'Q21': 'VIF = 3.047 | سازه: SA | وضعیت: قابل قبول',
+  'Q22': 'VIF = 3.176 | سازه: SA | وضعیت: قابل قبول',
+  'Q23': 'VIF = 2.892 | سازه: SA | وضعیت: خوب',
+  'Q24': 'VIF = 3.108 | سازه: SA | وضعیت: قابل قبول',
+  'Q25': 'VIF = 2.811 | سازه: SA | وضعیت: خوب',
+  'Q26': 'VIF = 3.241 | سازه: SA | وضعیت: قابل قبول',
+  'Q27': 'VIF = 2.312 | سازه: DS | وضعیت: عالی — کمترین VIF در کل مدل',
+  'Q28': 'VIF = 2.845 | سازه: DS | وضعیت: خوب',
+  'Q29': 'VIF = 2.618 | سازه: DS | وضعیت: خوب',
+  'Q30': 'VIF = 2.941 | سازه: DS | وضعیت: خوب'
+};

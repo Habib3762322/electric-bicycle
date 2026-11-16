@@ -502,36 +502,40 @@ function drawL1R2() {
   const r2 = state.loaded.r2 || FALLBACK_R2;
   const c = themeColors();
 
-  Plotly.newPlot(el, [
-    {
-      type: 'bar',
-      name: 'R²',
-      x: r2.map(r => r.Construct),
-      y: r2.map(r => r.R2),
-      marker: { color: '#3498db', line: { color: '#fff', width: 1.5 } },
-      text: r2.map(r => r.R2.toFixed(3)),
-      textposition: 'outside',
-      hovertemplate: '<b>%{x}</b><br>R² = %{y:.4f}<extra></extra>'
+  const constructs = r2.map(r => r.Construct);
+  const Z = [
+    r2.map(r => r.R2),
+    r2.map(r => r.R2_Adj)
+  ];
+  const metrics = ['R²', 'R² Adj'];
+
+  Plotly.newPlot(el, [{
+    type: 'surface',
+    x: constructs,
+    y: metrics,
+    z: Z,
+    colorscale: 'RdYlGn',
+    cmin: 0,
+    cmax: 0.6,
+    colorbar: {
+      title: 'R²',
+      thickness: 15,
+      tickfont: { color: c.text }
     },
-    {
-      type: 'bar',
-      name: 'R²-Adjusted',
-      x: r2.map(r => r.Construct),
-      y: r2.map(r => r.R2_Adj),
-      marker: { color: '#9b59b6', line: { color: '#fff', width: 1.5 } },
-      text: r2.map(r => r.R2_Adj.toFixed(3)),
-      textposition: 'outside',
-      hovertemplate: '<b>%{x}</b><br>R²-Adj = %{y:.4f}<extra></extra>'
+    text: Z.map((row, j) => row.map((v, i) =>
+      `سازه: ${constructs[i]}<br>${metrics[j]} = ${v.toFixed(4)}`
+    )),
+    hovertemplate: '%{text}<extra></extra>'
+  }], plotlyLayout({
+    height: 600,
+    scene: {
+      xaxis: { title: t('col_indicator'), gridcolor: c.grid },
+      yaxis: { title: '', gridcolor: c.grid },
+      zaxis: { title: 'R²', range: [0, 0.6], gridcolor: c.grid },
+      camera: { eye: { x: 1.6, y: -1.6, z: 1.0 } }
     }
-  ], plotlyLayout({
-    barmode: 'group',
-    height: 420,
-    xaxis: { gridcolor: c.grid, tickfont: { size: 12 } },
-    yaxis: { title: 'R²', gridcolor: c.grid, range: [0, 0.45] },
-    legend: { bgcolor: c.paper, font: { color: c.text } }
   }), PLOTLY_CFG);
 }
-
 /* ================================================================
    ۹. نمودار f²
    ================================================================ */
@@ -584,37 +588,45 @@ function drawL1Quality() {
   const constructs = Object.keys(q);
   const c = themeColors();
 
-  const metrics = [
-    { name: 'Cronbach α', key: 'Cronbach', color: '#3498db' },
-    { name: 'rho_a',      key: 'rho_a',    color: '#9b59b6' },
-    { name: 'rho_c (CR)', key: 'rho_c',    color: '#f39c12' },
-    { name: 'AVE',        key: 'AVE',      color: '#27ae60' }
-  ];
+  const metrics = ['Cronbach', 'rho_a', 'rho_c', 'AVE'];
+  const metricLabels = ['آلفای کرونباخ', 'rho_a', 'rho_c', 'AVE'];
+  const n_c = constructs.length, n_m = metrics.length;
 
-  const traces = metrics.map(m => ({
-    type: 'bar',
-    name: m.name,
+  const Z = [];
+  for (let j = 0; j < n_m; j++) {
+    const row = [];
+    for (let i = 0; i < n_c; i++) row.push(q[constructs[i]][metrics[j]]);
+    Z.push(row);
+  }
+
+  const thresholds = { Cronbach: 0.7, rho_a: 0.7, rho_c: 0.7, AVE: 0.5 };
+
+  Plotly.newPlot(el, [{
+    type: 'surface',
     x: constructs,
-    y: constructs.map(k => q[k][m.key]),
-    marker: { color: m.color, line: { color: '#fff', width: 1 } },
-    text: constructs.map(k => q[k][m.key].toFixed(3)),
-    textposition: 'outside',
-    textfont: { size: 9 },
-    hovertemplate: `<b>%{x}</b><br>${m.name} = %{y:.4f}<extra></extra>`
-  }));
-
-  Plotly.newPlot(el, traces, plotlyLayout({
-    barmode: 'group',
-    height: 420,
-    xaxis: { gridcolor: c.grid, tickfont: { size: 11 } },
-    yaxis: { title: 'مقدار', gridcolor: c.grid, range: [0, 1.05] },
-    legend: { bgcolor: c.paper, font: { color: c.text } },
-    shapes: [
-      { type: 'line', x0: -0.5, x1: constructs.length - 0.5, y0: 0.7, y1: 0.7,
-        line: { color: '#e74c3c', dash: 'dash', width: 1.5 } },
-      { type: 'line', x0: -0.5, x1: constructs.length - 0.5, y0: 0.5, y1: 0.5,
-        line: { color: '#f39c12', dash: 'dot', width: 1.5 } }
-    ]
+    y: metricLabels,
+    z: Z,
+    colorscale: 'Viridis',
+    cmin: 0.5,
+    cmax: 1.0,
+    colorbar: {
+      title: '',
+      thickness: 15,
+      tickfont: { color: c.text }
+    },
+    text: Z.map((row, j) => row.map((v, i) => {
+      const m = metrics[j], th = thresholds[m];
+      return `سازه: ${constructs[i]}<br>${metricLabels[j]} = ${v.toFixed(4)}<br>${v >= th ? '✅ بالای آستانه' : '⚠ زیر آستانه'}`;
+    })),
+    hovertemplate: '%{text}<extra></extra>'
+  }], plotlyLayout({
+    height: 600,
+    scene: {
+      xaxis: { title: 'سازه', gridcolor: c.grid },
+      yaxis: { title: 'شاخص', gridcolor: c.grid },
+      zaxis: { title: 'مقدار', range: [0.4, 1.05], gridcolor: c.grid },
+      camera: { eye: { x: 1.6, y: -1.6, z: 1.0 } }
+    }
   }), PLOTLY_CFG);
 }
 
@@ -626,94 +638,125 @@ function drawL1Loadings() {
   if (!el) return;
   const L = state.loaded.loadings || FALLBACK_LOADINGS;
   const constructs = Object.keys(L);
-  const maxItems = Math.max(...constructs.map(k => Object.keys(L[k]).length));
-
-  // ساخت ماتریس
-  const z = constructs.map(k => {
-    const items = Object.keys(L[k]).sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
-    const row = [];
-    for (let i = 0; i < maxItems; i++) {
-      row.push(i < items.length ? L[k][items[i]] : null);
-    }
-    return row;
-  });
-
-  const xLabels = Array.from({ length: maxItems }, (_, i) => `Item ${i + 1}`);
+  const maxInd = Math.max(...constructs.map(c => Object.keys(L[c]).length));
   const c = themeColors();
 
+  const Z = [];
+  for (const cName of constructs) {
+    const qs = Object.keys(L[cName]).sort();
+    const row = [];
+    for (let i = 0; i < maxInd; i++) row.push(i < qs.length ? L[cName][qs[i]] : null);
+    Z.push(row);
+  }
+
+  const qLabels = Array.from({ length: maxInd }, (_, i) => `Q${i + 1}`);
+
   Plotly.newPlot(el, [{
-    type: 'heatmap',
-    z: z,
-    x: xLabels,
+    type: 'surface',
+    x: qLabels,
     y: constructs,
+    z: Z,
     colorscale: 'RdYlGn',
-    zmin: 0.6,
-    zmax: 1.0,
+    cmin: 0.6,
+    cmax: 1.0,
     colorbar: {
-      title: 'بار عاملی',
+      title: 'بار',
       thickness: 15,
       tickfont: { color: c.text }
     },
-    hovertemplate: '<b>%{y}</b><br>%{x}<br>بار عاملی = %{z:.3f}<extra></extra>'
+    text: Z.map((row, i) => row.map((v, j) => {
+      if (v == null) return '';
+      const qs = Object.keys(L[constructs[i]]).sort();
+      return `سازه: ${constructs[i]}<br>شاخص: ${qs[j]}<br>بار = ${v.toFixed(3)}<br>${v >= 0.7 ? '✅' : '⚠'}`;
+    })),
+    hovertemplate: '%{text}<extra></extra>'
   }], plotlyLayout({
-    height: 380,
-    margin: { l: 80, r: 60, t: 30, b: 50 },
-    xaxis: { side: 'top', gridcolor: c.grid },
-    yaxis: { gridcolor: c.grid }
+    height: 600,
+    scene: {
+      xaxis: { title: 'شاخص', gridcolor: c.grid },
+      yaxis: { title: 'سازه', gridcolor: c.grid },
+      zaxis: { title: 'بار عاملی', range: [0.6, 1.0], gridcolor: c.grid },
+      camera: { eye: { x: 1.6, y: -1.6, z: 1.0 } }
+    }
   }), PLOTLY_CFG);
 }
-
 /* ================================================================
    ۱۲. Heatmap VIF
    ================================================================ */
-function drawL1VIF() {
-  const el = $('chart-l1-vif');
+function drawL3Q2Columns(targetId) {
+  const el = $(targetId);
   if (!el) return;
-  const V = state.loaded.vif || FALLBACK_VIF;
-  const constructs = Object.keys(V);
-  const maxItems = Math.max(...constructs.map(k => Object.keys(V[k]).length));
-
-  const z = constructs.map(k => {
-    const items = Object.keys(V[k]).sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
-    const row = [];
-    for (let i = 0; i < maxItems; i++) {
-      row.push(i < items.length ? V[k][items[i]] : null);
-    }
-    return row;
-  });
-
-  const xLabels = Array.from({ length: maxItems }, (_, i) => `Item ${i + 1}`);
+  const idx = activeIndices();
+  const predict = state.loaded.plsPredict || [];
   const c = themeColors();
 
-  Plotly.newPlot(el, [{
-    type: 'heatmap',
-    z: z,
-    x: xLabels,
-    y: constructs,
-    colorscale: [
-      [0, '#1abc9c'],
-      [0.3, '#27ae60'],
-      [0.5, '#f1c40f'],
-      [0.7, '#f39c12'],
-      [1, '#e74c3c']
-    ],
-    zmin: 1,
-    zmax: 5,
-    colorbar: {
-      title: 'VIF',
-      thickness: 15,
-      tickfont: { color: c.text }
-    },
-    hovertemplate: '<b>%{y}</b><br>%{x}<br>VIF = %{z:.3f}<extra></extra>'
-  }], plotlyLayout({
-    height: 380,
-    margin: { l: 80, r: 60, t: 30, b: 50 },
-    xaxis: { side: 'top', gridcolor: c.grid },
-    yaxis: { gridcolor: c.grid }
-  }), PLOTLY_CFG);
-}
+  const labels = idx.map(i => DATA.indicators[i]);
+  const values = idx.map(i => predict[i]?.q2 || DATA.Q2[i] || 0);
+  const colors = values.map(v => v > 0.10 ? '#2ca02c' : (v > 0 ? '#ff7f0e' : '#d62728'));
+  const sizes = idx.map(i => state.highlighted === DATA.indicators[i] ? 16 : 10);
 
-/* ================================================================
+  // خطوط عمودی از z=0 تا z=Q²
+  const xs = [], ys = [], zs = [];
+  idx.forEach((i, k) => {
+    xs.push(k, k, null);
+    ys.push(0, 0, null);
+    zs.push(0, values[k], null);
+  });
+
+  Plotly.newPlot(el, [
+    {
+      type: 'scatter3d',
+      mode: 'lines',
+      x: xs, y: ys, z: zs,
+      line: { color: '#7f8c8d', width: 8 },
+      hoverinfo: 'skip',
+      showlegend: false
+    },
+    {
+      type: 'scatter3d',
+      mode: 'markers',
+      x: idx.map((_, k) => k),
+      y: idx.map(() => 0),
+      z: values,
+      marker: {
+        size: sizes,
+        color: colors,
+        line: { color: '#000', width: 1 },
+        symbol: 'circle'
+      },
+      text: labels,
+      hovertemplate: '<b>%{text}</b><br>Q² = %{z:.4f}<extra></extra>',
+      showlegend: false
+    },
+    // خط آستانه 0.10
+    {
+      type: 'scatter3d',
+      mode: 'lines',
+      x: [0, idx.length - 1],
+      y: [0, 0],
+      z: [0.10, 0.10],
+      line: { color: '#27ae60', width: 3, dash: 'dash' },
+      hoverinfo: 'skip',
+      showlegend: false
+    }
+  ], plotlyLayout({
+    height: 620,
+    scene: {
+      xaxis: {
+        title: '',
+        tickmode: 'array',
+        tickvals: idx.filter((_, k) => k % 2 === 0).map((_, k) => k * 2),
+        ticktext: labels.filter((_, k) => k % 2 === 0),
+        tickfont: { size: 9 },
+        gridcolor: c.grid
+      },
+      yaxis: { showticklabels: false, range: [-1, 1], gridcolor: c.grid },
+      zaxis: { title: 'Q²predict', range: [0, Math.max(...values) * 1.2], gridcolor: c.grid },
+      camera: { eye: { x: 1.7, y: -1.6, z: 0.9 } }
+    },
+    margin: { l: 0, r: 0, t: 10, b: 0 }
+  }), PLOTLY_CFG);
+}/* ================================================================
    ۱۳. ماتریس HTMT
    ================================================================ */
 function drawL1HTMT() {
@@ -975,6 +1018,41 @@ function renderVIFTable() {
 
   html += `</tbody></table></div>`;
   cont.innerHTML = html;
+  // 🆕 فعال‌سازی Tooltip
+  bindVIFInterp();
+/* ================================================================
+   🆕 Tooltip شناور روی جدول VIF
+   ================================================================ */
+function bindVIFInterp() {
+  let tooltip = document.getElementById('vif-row-tooltip');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'vif-row-tooltip';
+    tooltip.className = 'table-tooltip';
+    document.body.appendChild(tooltip);
+  }
+
+  document.querySelectorAll('.vif-row').forEach(row => {
+    row.addEventListener('mouseenter', (e) => {
+      const ind = row.querySelector('.vif-ind-chip')?.textContent || '?';
+      const detail = (state.lang === 'en') 
+        ? `VIF analysis for indicator ${ind}` 
+        : (VIF_DETAILS[ind] || `شاخص ${ind}`);
+
+      tooltip.innerHTML = `<span class="tooltip-title">${state.lang === 'fa' ? 'تحلیل شاخص' : 'Indicator Analysis'} ${ind}</span><div>${detail}</div>`;
+      tooltip.style.display = 'block';
+      positionTooltip(e, tooltip);
+    });
+
+    row.addEventListener('mousemove', (e) => {
+      if (tooltip.style.display === 'block') positionTooltip(e, tooltip);
+    });
+
+    row.addEventListener('mouseleave', () => {
+      tooltip.style.display = 'none';
+    });
+  });
+}
 }
 
 function bindVIFTableFilters() {
@@ -1469,50 +1547,84 @@ function drawL3Stems() {
   if (!el) return;
   const idx = activeIndices();
   const predict = state.loaded.plsPredict || [];
+  const c = themeColors();
 
   const labels = idx.map(i => DATA.indicators[i]);
-
-  const traces = [
-    {
-      type: 'bar',
-      name: 'PLS',
-      x: labels,
-      y: idx.map(i => predict[i]?.rmse_pls || DATA.PLS_RMSE[i] || 0),
-      marker: { color: '#2ca02c' },
-      hovertemplate: '<b>%{x}</b><br>PLS RMSE = %{y:.4f}<extra></extra>'
-    },
-    {
-      type: 'bar',
-      name: 'LM',
-      x: labels,
-      y: idx.map(i => predict[i]?.rmse_lm || DATA.LM_RMSE[i] || 0),
-      marker: { color: '#f39c12' },
-      hovertemplate: '<b>%{x}</b><br>LM RMSE = %{y:.4f}<extra></extra>'
-    },
-    {
-      type: 'bar',
-      name: 'IA',
-      x: labels,
-      y: idx.map(i => predict[i]?.rmse_ia || DATA.IA_RMSE[i] || 0),
-      marker: { color: '#e74c3c' },
-      hovertemplate: '<b>%{x}</b><br>IA RMSE = %{y:.4f}<extra></extra>'
-    }
+  const methods = ['PLS-SEM', 'LM', 'IA'];
+  const rmse = [
+    idx.map(i => predict[i]?.rmse_pls || DATA.PLS_RMSE[i] || 0),
+    idx.map(i => predict[i]?.rmse_lm || DATA.LM_RMSE[i] || 0),
+    idx.map(i => predict[i]?.rmse_ia || DATA.IA_RMSE[i] || 0)
   ];
 
+  const allVals = idx.flatMap((i, k) => [rmse[0][k], rmse[1][k], rmse[2][k]]);
+  const vmin = Math.min(...allVals), vmax = Math.max(...allVals);
+
+  // خطوط عمودی (stems)
+  const xs = [], ys = [], zs = [];
+  for (let j = 0; j < 3; j++) {
+    idx.forEach((i, k) => {
+      xs.push(k, k, null);
+      ys.push(j, j, null);
+      zs.push(0, rmse[j][k], null);
+    });
+  }
+
+  const traces = [{
+    type: 'scatter3d',
+    mode: 'lines',
+    x: xs, y: ys, z: zs,
+    line: { color: '#7f8c8d', width: 4 },
+    hoverinfo: 'skip',
+    showlegend: false
+  }];
+
+  // نقاط
+  for (let j = 0; j < 3; j++) {
+    traces.push({
+      type: 'scatter3d',
+      mode: 'markers',
+      x: idx.map((_, k) => k),
+      y: idx.map(() => j),
+      z: rmse[j],
+      marker: {
+        size: 6,
+        color: rmse[j],
+        colorscale: 'Turbo',
+        cmin: vmin,
+        cmax: vmax,
+        line: { color: '#000', width: 1 }
+      },
+      name: methods[j],
+      legendgroup: methods[j],
+      customdata: idx.map((i, k) => [DATA.indicators[i], rmse[j][k]]),
+      hovertemplate: `<b>%{customdata[0]}</b><br>${methods[j]}: %{customdata[1]:.4f}<extra></extra>`
+    });
+  }
+
   Plotly.newPlot(el, traces, plotlyLayout({
-    barmode: 'group',
-    height: 420,
-    margin: { l: 50, r: 20, t: 30, b: 90 },
-    xaxis: {
-      gridcolor: themeColors().grid,
-      tickangle: -60,
-      tickfont: { size: 9 }
+    height: 620,
+    scene: {
+      xaxis: {
+        title: '',
+        tickmode: 'array',
+        tickvals: idx.filter((_, k) => k % 2 === 0).map((_, k) => k * 2),
+        ticktext: labels.filter((_, k) => k % 2 === 0),
+        tickfont: { size: 9 },
+        gridcolor: c.grid
+      },
+      yaxis: {
+        title: '',
+        tickmode: 'array',
+        tickvals: [0, 1, 2],
+        ticktext: methods,
+        gridcolor: c.grid
+      },
+      zaxis: { title: 'RMSE', range: [0, vmax * 1.15], gridcolor: c.grid },
+      camera: { eye: { x: 1.7, y: -1.6, z: 0.9 } }
     },
-    yaxis: { title: 'RMSE', gridcolor: themeColors().grid },
-    legend: {
-      bgcolor: themeColors().paper,
-      font: { color: themeColors().text }
-    }
+    margin: { l: 0, r: 0, t: 10, b: 0 },
+    legend: { x: 0, y: 1, bgcolor: c.paper, font: { color: c.text } }
   }), PLOTLY_CFG);
 }
 
@@ -1524,34 +1636,53 @@ function drawL3Landscape() {
   if (!el) return;
   const idx = activeIndices();
   const predict = state.loaded.plsPredict || [];
+  const c = themeColors();
 
   const labels = idx.map(i => DATA.indicators[i]);
-  const z = [
+  const methods = ['PLS-SEM', 'LM', 'IA'];
+  const rmse = [
     idx.map(i => predict[i]?.rmse_pls || DATA.PLS_RMSE[i] || 0),
-    idx.map(i => predict[i]?.rmse_lm  || DATA.LM_RMSE[i]  || 0),
-    idx.map(i => predict[i]?.rmse_ia  || DATA.IA_RMSE[i]  || 0)
+    idx.map(i => predict[i]?.rmse_lm || DATA.LM_RMSE[i] || 0),
+    idx.map(i => predict[i]?.rmse_ia || DATA.IA_RMSE[i] || 0)
   ];
 
+  // Z: [method][indicator]
+  const Z = [rmse[0], rmse[1], rmse[2]];
+  const X = idx.map((_, k) => k);
+  const Y = [0, 1, 2];
+
   Plotly.newPlot(el, [{
-    type: 'heatmap',
-    z: z,
-    x: labels,
-    y: ['PLS', 'LM', 'IA'],
+    type: 'surface',
+    x: X,
+    y: Y,
+    z: Z,
     colorscale: 'Turbo',
-    colorbar: {
-      title: 'RMSE',
-      thickness: 12,
-      tickfont: { color: themeColors().text }
-    },
-    hovertemplate: 'روش: %{y}<br>شاخص: %{x}<br>RMSE: %{z:.4f}<extra></extra>'
+    colorbar: { title: 'RMSE', thickness: 15, tickfont: { color: c.text } },
+    hovertemplate: 'شاخص: %{x}<br>روش: %{y}<br>RMSE: %{z:.4f}<extra></extra>'
   }], plotlyLayout({
-    height: 320,
-    margin: { l: 60, r: 20, t: 20, b: 80 },
-    xaxis: { tickangle: -60, tickfont: { size: 9 } },
-    yaxis: { gridcolor: themeColors().grid }
+    height: 620,
+    scene: {
+      xaxis: {
+        title: 'شاخص',
+        tickmode: 'array',
+        tickvals: idx.filter((_, k) => k % 3 === 0).map((_, k) => k * 3),
+        ticktext: labels.filter((_, k) => k % 3 === 0),
+        tickfont: { size: 9 },
+        gridcolor: c.grid
+      },
+      yaxis: {
+        title: 'روش',
+        tickmode: 'array',
+        tickvals: [0, 1, 2],
+        ticktext: methods,
+        gridcolor: c.grid
+      },
+      zaxis: { title: 'RMSE', gridcolor: c.grid },
+      camera: { eye: { x: 1.5, y: -1.7, z: 1.1 } }
+    },
+    margin: { l: 0, r: 0, t: 10, b: 0 }
   }), PLOTLY_CFG);
 }
-
 /* ================================================================
    ۲۵. پشته Q² (Bar)
    ================================================================ */
@@ -1560,33 +1691,48 @@ function drawL3Ridge() {
   if (!el) return;
   const idx = activeIndices();
   const predict = state.loaded.plsPredict || [];
+  const c = themeColors();
 
   const labels = idx.map(i => DATA.indicators[i]);
-  const values = idx.map(i => predict[i]?.q2 || DATA.Q2[i] || 0);
+  const q2 = idx.map(i => predict[i]?.q2 || DATA.Q2[i] || 0);
+
+  // ساخت سطح با درون‌یابی
+  const NX = 150, NY = 22;
+  const xg = Array.from({ length: NX }, (_, k) => -0.5 + k * (idx.length) / (NX - 1));
+  const yg = Array.from({ length: NY }, (_, k) => -0.6 + k * 1.2 / (NY - 1));
+  const Z = yg.map(y => xg.map(x => {
+    let s = 0;
+    idx.forEach((i, k) => {
+      const gx = Math.exp(-Math.pow(x - k, 2) / (2 * 0.55 * 0.55));
+      const gy = Math.exp(-Math.pow(y, 2) / (2 * 0.2 * 0.2));
+      s += q2[k] * gx * gy;
+    });
+    return s;
+  }));
 
   Plotly.newPlot(el, [{
-    type: 'bar',
-    x: labels,
-    y: values,
-    marker: {
-      color: values,
-      colorscale: 'Viridis',
-      line: { color: '#000', width: 0.5 }
-    },
-    text: values.map(v => v.toFixed(3)),
-    textposition: 'outside',
-    textfont: { size: 8 },
-    hovertemplate: '<b>%{x}</b><br>Q² = %{y:.4f}<extra></extra>'
+    type: 'surface',
+    x: xg,
+    y: yg,
+    z: Z,
+    colorscale: 'Viridis',
+    colorbar: { title: 'Q²', len: 0.6, tickfont: { color: c.text } },
+    hovertemplate: 'شاخص ≈ %{x:.1f}<br>Q² = %{z:.4f}<extra></extra>'
   }], plotlyLayout({
-    height: 380,
-    margin: { l: 50, r: 20, t: 30, b: 90 },
-    xaxis: {
-      tickangle: -60,
-      tickfont: { size: 9 },
-      gridcolor: themeColors().grid
+    height: 620,
+    scene: {
+      xaxis: {
+        title: 'شاخص',
+        tickmode: 'array',
+        tickvals: idx.filter((_, k) => k % 3 === 0).map((_, k) => k * 3),
+        ticktext: labels.filter((_, k) => k % 3 === 0),
+        gridcolor: c.grid
+      },
+      yaxis: { showticklabels: false, gridcolor: c.grid },
+      zaxis: { title: 'Q²predict', gridcolor: c.grid },
+      camera: { eye: { x: 1.7, y: -1.5, z: 1.0 } }
     },
-    yaxis: { title: 'Q²predict', gridcolor: themeColors().grid },
-    showlegend: false
+    margin: { l: 0, r: 0, t: 10, b: 0 }
   }), PLOTLY_CFG);
 }
 
@@ -1596,46 +1742,55 @@ function drawL3Ridge() {
 function drawL3CVPAT() {
   const el = $('chart-l3-cvpat');
   if (!el) return;
+  const c = themeColors();
 
-  // داده CVPAT (از مقاله/fallback)
+  // داده CVPAT
   const entities = ['DKM', 'DTS', 'Overall'];
   const comparisons = ['PLS vs IA', 'PLS vs LM'];
   const Diff = [
-    [-0.095, -0.118, -0.107],  // PLS vs IA
-    [-0.042, -0.055, -0.049]   // PLS vs LM
+    [-0.095, -0.118, -0.107],
+    [-0.042, -0.055, -0.049]
   ];
-  const colors = [['#e74c3c', '#c0392b', '#a93226'], ['#3498db', '#2980b9', '#1f618d']];
 
-  const traces = comparisons.map((comp, ci) => ({
-    type: 'bar',
-    name: comp,
-    x: entities,
-    y: Diff[ci],
-    marker: { color: colors[ci] },
-    text: Diff[ci].map(v => v.toFixed(3)),
-    textposition: 'outside',
-    textfont: { size: 10 },
-    hovertemplate: `<b>%{x}</b><br>${comp}<br>Δ = %{y:.4f}<extra></extra>`
-  }));
+  // Z: [comparison][entity]
+  const Z = Diff;
 
-  Plotly.newPlot(el, traces, plotlyLayout({
-    barmode: 'group',
-    height: 380,
-    margin: { l: 50, r: 20, t: 30, b: 40 },
-    xaxis: { gridcolor: themeColors().grid },
-    yaxis: {
-      title: 'Δ',
-      gridcolor: themeColors().grid,
-      zeroline: true,
-      zerolinecolor: '#888'
+  Plotly.newPlot(el, [{
+    type: 'surface',
+    x: [0, 1, 2],
+    y: [0, 1],
+    z: Z,
+    colorscale: 'RdYlGn',
+    cmin: -0.20,
+    cmax: 0.02,
+    colorbar: { title: 'Δ', thickness: 15, tickfont: { color: c.text } },
+    text: Z.map((row, i) => row.map((v, j) => 
+      `سازه: ${entities[j]}<br>مقایسه: ${comparisons[i]}<br>Δ = ${v.toFixed(4)}`
+    )),
+    hovertemplate: '%{text}<extra></extra>'
+  }], plotlyLayout({
+    height: 620,
+    scene: {
+      xaxis: {
+        title: '',
+        tickmode: 'array',
+        tickvals: [0, 1, 2],
+        ticktext: entities,
+        gridcolor: c.grid
+      },
+      yaxis: {
+        title: '',
+        tickmode: 'array',
+        tickvals: [0, 1],
+        ticktext: comparisons,
+        gridcolor: c.grid
+      },
+      zaxis: { title: 'Δ', gridcolor: c.grid },
+      camera: { eye: { x: 1.7, y: -1.7, z: 0.9 } }
     },
-    legend: {
-      bgcolor: themeColors().paper,
-      font: { color: themeColors().text }
-    }
+    margin: { l: 0, r: 0, t: 10, b: 0 }
   }), PLOTLY_CFG);
 }
-
 /* ================================================================
    ۲۷. توزیع خطاها (Ridgeline)
    ================================================================ */
@@ -1644,36 +1799,55 @@ function drawL3Ridgeline() {
   if (!el) return;
   const idx = activeIndices();
   const predict = state.loaded.plsPredict || [];
+  const c = themeColors();
 
   const labels = idx.map(i => DATA.indicators[i]);
   const means = idx.map(i => (predict[i]?.rmse_pls || DATA.PLS_RMSE[i] || 0) * 0.05);
   const sds = idx.map(i => (predict[i]?.rmse_pls || DATA.PLS_RMSE[i] || 0) * 0.1);
 
-  Plotly.newPlot(el, [{
-    type: 'bar',
-    x: labels,
-    y: means,
-    error_y: {
-      type: 'data',
-      array: sds,
-      visible: true,
-      color: '#3498db'
+  // ساخت منحنی چگالی برای هر شاخص
+  const xg = Array.from({ length: 90 }, (_, k) => -0.35 + k * 0.4 / 89);
+  const traces = [];
+
+  idx.forEach((i, k) => {
+    const mu = means[k];
+    const sig = sds[k] * 0.08 || 0.01;
+    const z = xg.map(x => Math.exp(-Math.pow(x - mu, 2) / (2 * sig * sig)));
+    const tt = k / Math.max(1, idx.length - 1);
+    const isHi = state.highlighted === DATA.indicators[i];
+    const color = isHi ? '#ffd700' : `rgb(${Math.round(253 * tt)},${Math.round(231 * tt + 30)},${Math.round(37 * tt + 50)})`;
+
+    traces.push({
+      type: 'scatter3d',
+      x: xg,
+      y: Array(xg.length).fill(k),
+      z: z,
+      mode: 'lines',
+      line: { color: color, width: isHi ? 8 : 4 },
+      name: DATA.indicators[i],
+      showlegend: false,
+      customdata: idx.map((_, kk) => [labels[kk], means[kk].toFixed(4), sds[kk].toFixed(4)]),
+      hovertemplate: `<b>%{customdata[0]}</b><br>μ = %{customdata[1]}<br>σ = %{customdata[2]}<extra></extra>`
+    });
+  });
+
+  Plotly.newPlot(el, traces, plotlyLayout({
+    height: 620,
+    scene: {
+      xaxis: { title: 'خطا', gridcolor: c.grid },
+      yaxis: {
+        title: 'شاخص',
+        tickmode: 'array',
+        tickvals: idx.filter((_, k) => k % 3 === 0).map((_, k) => k * 3),
+        ticktext: labels.filter((_, k) => k % 3 === 0),
+        gridcolor: c.grid
+      },
+      zaxis: { title: 'PDF', gridcolor: c.grid },
+      camera: { eye: { x: 1.5, y: -1.9, z: 1.0 } }
     },
-    marker: { color: '#3498db' },
-    hovertemplate: '<b>%{x}</b><br>میانگین خطا = %{y:.4f}<extra></extra>'
-  }], plotlyLayout({
-    height: 380,
-    margin: { l: 50, r: 20, t: 30, b: 90 },
-    xaxis: {
-      tickangle: -60,
-      tickfont: { size: 9 },
-      gridcolor: themeColors().grid
-    },
-    yaxis: { title: 'خطای میانگین', gridcolor: themeColors().grid },
-    showlegend: false
+    margin: { l: 0, r: 0, t: 10, b: 0 }
   }), PLOTLY_CFG);
 }
-
 /* ================================================================
    ۲۸. پراکندگی PLS vs LM
    ================================================================ */
@@ -3116,23 +3290,27 @@ function injectMainInterpretations() {
     const id = plot.id;
     if (!MAIN_CHART_INTS[id]) return;
 
-    // حذف تزریق‌های قبلی (جلوگیری از تکرار)
+    // حذف تزریق‌های قبلی
     card.querySelectorAll('.btn-interpretation').forEach(b => b.remove());
     card.querySelectorAll('.interpretation-panel').forEach(p => p.remove());
+    card.querySelectorAll('.chart-toolbar').forEach(t => t.remove());
 
     const title = card.querySelector('.chart-title');
     if (!title) return;
 
     const panelId = id + '-panel';
 
-    // دکمه تفسیر در header کارت
+    // دکمه‌های مشاهده تفسیر + دانلود PNG
     title.insertAdjacentHTML('beforeend',
-      `<button class="btn-interpretation" onclick="togglePanel('${panelId}', this)" style="margin-right:8px;">
-         <span class="icon-bulb">💡</span><span>${ti('show_btn')}</span>
-       </button>`
+      `<div class="chart-toolbar" style="margin-right:8px; display:flex; gap:6px;">
+        <button class="btn-interpretation" onclick="togglePanel('${panelId}', this)">
+          <span class="icon-bulb">💡</span><span>${ti('show_btn')}</span>
+        </button>
+        <button class="dl-btn" onclick="downloadChart('${id}', '${id}')" title="${state.lang === 'fa' ? 'دانلود PNG' : 'Download PNG'}">⬇ PNG</button>
+      </div>`
     );
 
-    // پنل تفسیر در انتهای کارت
+    // پنل تفسیر
     card.insertAdjacentHTML('beforeend',
       `<div class="interpretation-panel" id="${panelId}">
          <div class="interpretation-content">
@@ -3146,6 +3324,31 @@ function injectMainInterpretations() {
     );
   });
 
+  // --- برای جداول ---
+  Object.keys(MAIN_TABLE_INTS || {}).forEach(id => {
+    const cont = document.getElementById(id);
+    if (!cont) return;
+    const panelId = id + '-panel';
+    const oldPanel = document.getElementById(panelId);
+    if (oldPanel) oldPanel.remove();
+    const oldBtn = document.getElementById(panelId + '-btn');
+    if (oldBtn) oldBtn.remove();
+    const data = getTableInt(id);
+    if (!data) return;
+    const btnHtml = `
+      <button id="${panelId}-btn" class="btn-interpretation" onclick="togglePanel('${panelId}', this)" style="margin-bottom:12px; display:flex; margin-right:auto; margin-left:0;">
+        <span class="icon-bulb">💡</span><span>${ti('show_btn')}</span>
+      </button>
+      <div class="interpretation-panel" id="${panelId}" style="margin-bottom:12px;">
+        <div class="interpretation-content">
+          <div class="interp-header"><span class="interp-header-icon">📊</span><span class="interp-title">${data.title || ti('title_table')}</span></div>
+          <div class="interp-body">${data.text}</div>
+        </div>
+      </div>
+    `;
+    cont.insertAdjacentHTML('beforebegin', btnHtml);
+  });
+}
   // --- برای جداول (VIF، پایایی، آمار توصیفی) ---
   Object.keys(MAIN_TABLE_INTS || {}).forEach(id => {
     const cont = document.getElementById(id);
@@ -3176,7 +3379,6 @@ function injectMainInterpretations() {
     `;
     cont.insertAdjacentHTML('beforebegin', btnHtml);
   });
-}
 
 /* ================================================================
    ۴۴. جدول داده (Data Table)
@@ -3306,27 +3508,10 @@ function renderHypotheses() {
   const kpiEl = $('hyp-kpi-grid');
   if (kpiEl) {
     kpiEl.innerHTML = `
-      <div class="hyp-kpi hyp-kpi-total">
-        <div class="hyp-kpi-icon">📚</div>
-        <div class="hyp-kpi-label">${t('hyp_kpi_total')}</div>
-        <div class="hyp-kpi-value">${total}</div>
-      </div>
-      <div class="hyp-kpi hyp-kpi-conf">
-        <div class="hyp-kpi-icon">✅</div>
-        <div class="hyp-kpi-label">${t('hyp_kpi_confirmed')}</div>
-        <div class="hyp-kpi-value">${confirmed}</div>
-      </div>
-      <div class="hyp-kpi hyp-kpi-rej">
-        <div class="hyp-kpi-icon">❌</div>
-        <div class="hyp-kpi-label">${t('hyp_kpi_rejected')}</div>
-        <div class="hyp-kpi-value">${rejected}</div>
-      </div>
-      <div class="hyp-kpi hyp-kpi-ratio">
-        <div class="hyp-kpi-icon">📈</div>
-        <div class="hyp-kpi-label">${t('hyp_kpi_ratio')}</div>
-        <div class="hyp-kpi-value">${ratio}%</div>
-        <div class="hyp-kpi-bar"><span style="width:${ratio}%"></span></div>
-      </div>
+      <div class="hyp-kpi hyp-kpi-total"><div class="hyp-kpi-icon">📚</div><div class="hyp-kpi-label">${t('hyp_kpi_total')}</div><div class="hyp-kpi-value">${total}</div></div>
+      <div class="hyp-kpi hyp-kpi-conf"><div class="hyp-kpi-icon">✅</div><div class="hyp-kpi-label">${t('hyp_kpi_confirmed')}</div><div class="hyp-kpi-value">${confirmed}</div></div>
+      <div class="hyp-kpi hyp-kpi-rej"><div class="hyp-kpi-icon">❌</div><div class="hyp-kpi-label">${t('hyp_kpi_rejected')}</div><div class="hyp-kpi-value">${rejected}</div></div>
+      <div class="hyp-kpi hyp-kpi-ratio"><div class="hyp-kpi-icon">📈</div><div class="hyp-kpi-label">${t('hyp_kpi_ratio')}</div><div class="hyp-kpi-value">${ratio}%</div><div class="hyp-kpi-bar"><span style="width:${ratio}%"></span></div></div>
     `;
   }
 
@@ -3347,16 +3532,14 @@ function renderHypotheses() {
     return;
   }
 
-  let html = `<div class="hyp-table-wrap"><table class="hyp-table"><thead><tr>
-    <th>${t('hyp_col_id')}</th>
-    <th>${t('hyp_col_type')}</th>
-    <th>${t('hyp_col_path')}</th>
-    <th>${t('hyp_col_beta')}</th>
-    <th>${t('hyp_col_t')}</th>
-    <th>${t('hyp_col_p')}</th>
-    <th>${t('hyp_col_f2')}</th>
-    <th>${t('hyp_col_var')}</th>
-    <th>${t('hyp_col_result')}</th>
+  let html = `<div class="hyp-hint" style="padding:10px 16px; margin-bottom:12px; background:rgba(52,152,219,.08); border-right:3px solid #3498db; border-radius:6px; font-size:12px; color:var(--text-muted); line-height:1.8;">
+    💡 ${state.lang === 'fa' ? 'موس را روی هر ردیف نگه دارید تا تحلیل تفصیلی «چرا تأیید/رد شد» را ببینید.' : 'Hover over any row to see the detailed "why" analysis.'}
+  </div>`;
+
+  html += `<div class="hyp-table-wrap"><table class="hyp-table"><thead><tr>
+    <th>${t('hyp_col_id')}</th><th>${t('hyp_col_type')}</th><th>${t('hyp_col_path')}</th>
+    <th>${t('hyp_col_beta')}</th><th>${t('hyp_col_t')}</th><th>${t('hyp_col_p')}</th>
+    <th>${t('hyp_col_f2')}</th><th>${t('hyp_col_var')}</th><th>${t('hyp_col_result')}</th>
   </tr></thead><tbody>`;
 
   rows.forEach(h => {
@@ -3367,16 +3550,8 @@ function renderHypotheses() {
     const betaTxt = (h.beta >= 0 ? '' : '−') + Math.abs(h.beta).toFixed(3);
     const pSig = h.pval < 0.05;
     const pCell = `<span class="hyp-p ${pSig ? 'hyp-p-sig' : 'hyp-p-ns'}">${h.p}</span>`;
-
-    const f2Cell = h.f2 == null
-      ? '<span class="hyp-dash">—</span>'
-      : `<div class="hyp-f2-cell"><span class="hyp-f2-val">${h.f2.toFixed(3)}</span><span class="hyp-f2-tag">${hypEffectLabel(h.f2)}</span></div>`;
-
-    const varCell = h.variance == null
-      ? '<span class="hyp-dash">—</span>'
-      : `<span class="hyp-var">${h.variance.toFixed(2)}%</span>`;
-
-    // ساخت مسیر با چیپ‌ها
+    const f2Cell = h.f2 == null ? '<span class="hyp-dash">—</span>' : `<div class="hyp-f2-cell"><span class="hyp-f2-val">${h.f2.toFixed(3)}</span><span class="hyp-f2-tag">${hypEffectLabel(h.f2)}</span></div>`;
+    const varCell = h.variance == null ? '<span class="hyp-dash">—</span>' : `<span class="hyp-var">${h.variance.toFixed(2)}%</span>`;
     const pathParts = h.path.split(/\s*(?:→|->|×)\s*/);
     const pathHtml = pathParts.map((p, i) => {
       const chip = `<span class="hyp-node">${p}</span>`;
@@ -3385,7 +3560,7 @@ function renderHypotheses() {
       return op + chip;
     }).join('');
 
-    html += `<tr class="hyp-row">
+    html += `<tr class="hyp-row" data-hyp="${h.id}">
       <td><span class="hyp-id-chip">${h.id}</span></td>
       <td><span class="${typeCls}">${hypTypeLabel(h.type)}</span></td>
       <td class="hyp-path">${pathHtml}</td>
@@ -3400,8 +3575,80 @@ function renderHypotheses() {
 
   html += `</tbody></table></div>`;
   cont.innerHTML = html;
+
+  // 🆕 فعال‌سازی Tooltip
+  bindHypInterp();
 }
 
+/* ================================================================
+   🆕 Tooltip شناور روی ردیف‌های جدول فرضیه‌ها
+   ================================================================ */
+/* ================================================================
+   🆕 Tooltip شناور بالای موس روی ردیف‌های جدول فرضیه‌ها
+   ================================================================ */
+function bindHypInterp() {
+  let tooltip = document.getElementById('hyp-row-tooltip');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'hyp-row-tooltip';
+    tooltip.className = 'table-tooltip';
+    document.body.appendChild(tooltip);
+  }
+
+  document.querySelectorAll('#hypotheses-container tbody tr').forEach(row => {
+    row.addEventListener('mouseenter', (e) => {
+      const hypId = row.dataset.hyp;
+      const detail = (state.lang === 'en' && typeof HYP_DETAILS_EN !== 'undefined' && HYP_DETAILS_EN[hypId])
+        ? HYP_DETAILS_EN[hypId]
+        : (typeof HYP_DETAILS !== 'undefined' ? HYP_DETAILS[hypId] : null);
+
+      if (detail) {
+        tooltip.innerHTML = `<span class="tooltip-title">${state.lang === 'fa' ? 'تحلیل فرضیه' : 'Hypothesis Analysis'} ${hypId}</span><div>${detail}</div>`;
+        tooltip.style.display = 'block';
+
+        // موقعیت‌دهی اولیه بالای موس
+        positionTooltip(e, tooltip);
+      }
+    });
+
+    row.addEventListener('mousemove', (e) => {
+      if (tooltip.style.display === 'block') {
+        positionTooltip(e, tooltip);
+      }
+    });
+
+    row.addEventListener('mouseleave', () => {
+      tooltip.style.display = 'none';
+    });
+  });
+}
+
+/* 🆕 موقعیت‌دهی هوشمند Tooltip (بالای موس) */
+function positionTooltip(e, tooltip) {
+  const offset = 20;  // فاصله از موس
+  const tw = tooltip.offsetWidth;
+  const th = tooltip.offsetHeight;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  // پیش‌فرض: بالای موس، وسط‌چین افقی
+  let x = e.clientX - tw / 2;
+  let y = e.clientY - th - offset;
+
+  // اگر بالای صفحه جا نشد → زیر موس
+  if (y < 10) {
+    y = e.clientY + offset;
+  }
+
+  // اگر سمت چپ بیرون زد → بچسبان به لبه چپ
+  if (x < 10) x = 10;
+
+  // اگر سمت راست بیرون زد → بچسبان به لبه راست
+  if (x + tw > vw - 10) x = vw - tw - 10;
+
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
+}
 function bindHypothesisFilters() {
   document.querySelectorAll('.hyp-chip[data-hyp-filter]').forEach(btn => {
     btn.onclick = () => {
@@ -3648,6 +3895,15 @@ function renderChartsForActiveTab() {
       case 'download':
         renderExcelViewer();
         break;
+      case 'smartpls-graphical':
+        renderSmartPLSGraphics();
+        break;
+      case 'causal-ml':
+        renderCausalMLSection();
+        break;
+         case 'causal-ml':
+          renderCausalMLSection();
+            break;
     }
   } catch (e) {
     console.error('[App] Chart draw error for', id, ':', e);
@@ -3877,7 +4133,494 @@ window.addEventListener('resize', () => {
     window.dispatchEvent(new Event('plotly-resize'));
   }, 200);
 });
+/* ================================================================
+   ۵۷. خروجی گرافیکی SmartPLS — ۳ شکل SVG
+   ================================================================ */
+function renderSmartPLSGraphics() {
+  drawSmartPLSMeasurementModel();
+  drawSmartPLSStructuralModel();
+  drawSmartPLSBootstrapping();
+}
 
+/* ---------- شکل ۱: مدل اندازه‌گیری ---------- */
+function drawSmartPLSMeasurementModel() {
+  const el = document.getElementById('smartpls-graphic-1');
+  if (!el) return;
+  el.innerHTML = `
+    <svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; font-family:'Vazirmatn',Tahoma,sans-serif; direction:rtl;">
+      <defs>
+        <filter id="sh1" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="3" stdDeviation="3" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+      
+      <!-- خطوط از گویه‌ها به سازه‌ها -->
+      <g stroke="#8b94a7" stroke-width="1.5" fill="none">
+        <!-- DKM: Q1-Q9 -->
+        <line x1="110" y1="110" x2="370" y2="230"/><line x1="110" y1="140" x2="370" y2="235"/>
+        <line x1="110" y1="170" x2="370" y2="240"/><line x1="110" y1="200" x2="370" y2="245"/>
+        <line x1="110" y1="230" x2="370" y2="250"/><line x1="110" y1="260" x2="370" y2="255"/>
+        <line x1="110" y1="290" x2="370" y2="260"/><line x1="110" y1="320" x2="370" y2="265"/>
+        <line x1="110" y1="350" x2="370" y2="270"/>
+        
+        <!-- DTL: Q10-Q15 -->
+        <line x1="890" y1="110" x2="630" y2="230"/><line x1="890" y1="140" x2="630" y2="235"/>
+        <line x1="890" y1="170" x2="630" y2="240"/><line x1="890" y1="200" x2="630" y2="245"/>
+        <line x1="890" y1="230" x2="630" y2="250"/><line x1="890" y1="260" x2="630" y2="255"/>
+        
+        <!-- DTS: Q16-Q20 -->
+        <line x1="890" y1="350" x2="630" y2="410"/><line x1="890" y1="380" x2="630" y2="415"/>
+        <line x1="890" y1="410" x2="630" y2="420"/><line x1="890" y1="440" x2="630" y2="425"/>
+        <line x1="890" y1="470" x2="630" y2="430"/>
+        
+        <!-- SA: Q21-Q26 -->
+        <line x1="110" y1="410" x2="370" y2="410"/><line x1="110" y1="440" x2="370" y2="415"/>
+        <line x1="110" y1="470" x2="370" y2="420"/><line x1="110" y1="500" x2="370" y2="425"/>
+        <line x1="110" y1="530" x2="370" y2="430"/><line x1="110" y1="560" x2="370" y2="435"/>
+        
+        <!-- DS: Q27-Q30 -->
+        <line x1="500" y1="560" x2="500" y2="440"/><line x1="530" y1="560" x2="505" y2="440"/>
+        <line x1="560" y1="560" x2="510" y2="440"/><line x1="590" y1="560" x2="515" y2="440"/>
+      </g>
+      
+      <!-- گویه‌ها -->
+      <g filter="url(#sh1)">
+        <!-- DKM گویه‌ها -->
+        <g fill="#9b59b6">
+          <circle cx="100" cy="110" r="14"/><circle cx="100" cy="140" r="14"/>
+          <circle cx="100" cy="170" r="14"/><circle cx="100" cy="200" r="14"/>
+          <circle cx="100" cy="230" r="14"/><circle cx="100" cy="260" r="14"/>
+          <circle cx="100" cy="290" r="14"/><circle cx="100" cy="320" r="14"/>
+          <circle cx="100" cy="350" r="14"/>
+        </g>
+        <!-- DTL گویه‌ها -->
+        <g fill="#3498db">
+          <circle cx="900" cy="110" r="14"/><circle cx="900" cy="140" r="14"/>
+          <circle cx="900" cy="170" r="14"/><circle cx="900" cy="200" r="14"/>
+          <circle cx="900" cy="230" r="14"/><circle cx="900" cy="260" r="14"/>
+        </g>
+        <!-- DTS گویه‌ها -->
+        <g fill="#27ae60">
+          <circle cx="900" cy="350" r="14"/><circle cx="900" cy="380" r="14"/>
+          <circle cx="900" cy="410" r="14"/><circle cx="900" cy="440" r="14"/>
+          <circle cx="900" cy="470" r="14"/>
+        </g>
+        <!-- SA گویه‌ها -->
+        <g fill="#f39c12">
+          <circle cx="100" cy="410" r="14"/><circle cx="100" cy="440" r="14"/>
+          <circle cx="100" cy="470" r="14"/><circle cx="100" cy="500" r="14"/>
+          <circle cx="100" cy="530" r="14"/><circle cx="100" cy="560" r="14"/>
+        </g>
+        <!-- DS گویه‌ها -->
+        <g fill="#e67e22">
+          <circle cx="500" cy="570" r="14"/><circle cx="530" cy="570" r="14"/>
+          <circle cx="560" cy="570" r="14"/><circle cx="590" cy="570" r="14"/>
+        </g>
+      </g>
+      
+      <!-- برچسب گویه‌ها -->
+      <g font-size="9" font-weight="bold" text-anchor="middle" fill="#fff">
+        <text x="100" y="113">Q1</text><text x="100" y="143">Q2</text>
+        <text x="100" y="173">Q3</text><text x="100" y="203">Q4</text>
+        <text x="100" y="233">Q5</text><text x="100" y="263">Q6</text>
+        <text x="100" y="293">Q7</text><text x="100" y="323">Q8</text>
+        <text x="100" y="353">Q9</text>
+        
+        <text x="900" y="113">Q10</text><text x="900" y="143">Q11</text>
+        <text x="900" y="173">Q12</text><text x="900" y="203">Q13</text>
+        <text x="900" y="233">Q14</text><text x="900" y="263">Q15</text>
+        
+        <text x="900" y="353">Q16</text><text x="900" y="383">Q17</text>
+        <text x="900" y="413">Q18</text><text x="900" y="443">Q19</text>
+        <text x="900" y="473">Q20</text>
+        
+        <text x="100" y="413">Q21</text><text x="100" y="443">Q22</text>
+        <text x="100" y="473">Q23</text><text x="100" y="503">Q24</text>
+        <text x="100" y="533">Q25</text><text x="100" y="563">Q26</text>
+        
+        <text x="500" y="573">Q27</text><text x="530" y="573">Q28</text>
+        <text x="560" y="573">Q29</text><text x="590" y="573">Q30</text>
+      </g>
+      
+      <!-- سازه‌ها -->
+      <g filter="url(#sh1)">
+        <circle cx="500" cy="250" r="65" fill="#9b59b6"/>
+        <circle cx="500" cy="410" r="65" fill="#3498db"/>
+        <circle cx="500" cy="410" r="0" fill="none"/>
+        <rect x="420" y="380" width="160" height="60" rx="10" fill="#f39c12" transform="translate(0,0)"/>
+      </g>
+      <!-- سازه DTS (سبز) -->
+      <circle cx="500" cy="410" r="65" fill="#27ae60" filter="url(#sh1)"/>
+      <!-- سازه DS (نارنجی) -->
+      <rect x="420" y="500" width="160" height="60" rx="10" fill="#e67e22" filter="url(#sh1)"/>
+      
+      <!-- برچسب سازه‌ها -->
+      <g font-size="13" font-weight="bold" text-anchor="middle" fill="#fff">
+        <text x="500" y="245">مدیریت</text>
+        <text x="500" y="262">دانش</text>
+        <text x="500" y="405">موفقیت</text>
+        <text x="500" y="422">تحول</text>
+        <text x="500" y="535">استراتژی</text>
+        <text x="500" y="550">دیجیتال</text>
+      </g>
+      <!-- سازه DTL (بالا-چپ) -->
+      <rect x="80" y="20" width="140" height="60" rx="10" fill="#3498db" filter="url(#sh1)"/>
+      <text x="150" y="55" font-size="13" font-weight="bold" text-anchor="middle" fill="#fff">رهبری تحول</text>
+      <!-- سازه SA (بالا-راست) -->
+      <rect x="780" y="20" width="140" height="60" rx="10" fill="#f39c12" filter="url(#sh1)"/>
+      <text x="850" y="55" font-size="13" font-weight="bold" text-anchor="middle" fill="#fff">چابکی استراتژیک</text>
+    </svg>
+  `;
+}
+
+/* ---------- شکل ۲: مدل ساختاری (استفاده از SVG موجود) ---------- */
+function drawSmartPLSStructuralModel() {
+  const el = document.getElementById('smartpls-graphic-2');
+  if (!el) return;
+  // استفاده از همان SVG دیاگرام مسیر
+  el.innerHTML = `
+    <svg viewBox="0 0 850 600" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; font-family:'Vazirmatn',Tahoma,sans-serif; direction:rtl;">
+      <defs>
+        <marker id="m1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8b94a7"/></marker>
+        <marker id="m2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#e74c3c"/></marker>
+        <filter id="sh2" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.2"/></filter>
+      </defs>
+      <line x1="235.7" y1="346.7" x2="354.2" y2="225.3" stroke="#8b94a7" stroke-width="2.5" marker-end="url(#m1)"/>
+      <line x1="445.8" y1="225.3" x2="564.3" y2="346.7" stroke="#8b94a7" stroke-width="2.5" marker-end="url(#m1)"/>
+      <line x1="270" y1="400" x2="530" y2="400" stroke="#8b94a7" stroke-width="2.5" marker-end="url(#m1)"/>
+      <line x1="150" y1="150" x2="295" y2="275" stroke="#e74c3c" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#m2)"/>
+      <line x1="700" y1="150" x2="520" y2="310" stroke="#e74c3c" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#m2)"/>
+      <g filter="url(#sh2)">
+        <circle cx="200" cy="400" r="70" fill="#e67e22"/>
+        <circle cx="400" cy="180" r="70" fill="#9b59b6"/>
+        <circle cx="600" cy="400" r="70" fill="#27ae60"/>
+        <rect x="80" y="80" width="140" height="70" rx="10" fill="#3498db"/>
+        <rect x="630" y="80" width="140" height="70" rx="10" fill="#f39c12"/>
+      </g>
+      <g font-size="15" font-weight="bold" text-anchor="middle" fill="#fff">
+        <text x="400" y="180"><tspan x="400" dy="-0.8em">مدیریت</tspan><tspan x="400" dy="1.4em">دانش</tspan><tspan x="400" dy="1.8em" font-size="12" font-weight="normal" fill="#f1c40f">R² = 0.182</tspan></text>
+        <text x="200" y="400"><tspan x="200" dy="-0.4em">استراتژی</tspan><tspan x="200" dy="1.4em">دیجیتال</tspan></text>
+        <text x="600" y="400"><tspan x="600" dy="-0.8em">موفقیت تحول</tspan><tspan x="600" dy="1.4em">دیجیتال</tspan><tspan x="600" dy="1.8em" font-size="12" font-weight="normal" fill="#f1c40f">R² = 0.292</tspan></text>
+        <text x="150" y="115"><tspan x="150" dy="-0.4em">رهبری تحول</tspan><tspan x="150" dy="1.4em">دیجیتال</tspan></text>
+        <text x="700" y="115"><tspan x="700" dy="-0.4em">چابکی</tspan><tspan x="700" dy="1.4em">استراتژیک</tspan></text>
+      </g>
+      <g font-size="13" font-weight="bold" text-anchor="middle" font-family="Tahoma">
+        <g transform="translate(285,275)"><rect x="-30" y="-12" width="60" height="24" rx="4" fill="#fff" opacity="0.95" filter="url(#sh2)"/><text y="0" fill="#000">β = 0.241</text></g>
+        <g transform="translate(515,275)"><rect x="-30" y="-12" width="60" height="24" rx="4" fill="#fff" opacity="0.95" filter="url(#sh2)"/><text y="0" fill="#000">β = 0.270</text></g>
+        <g transform="translate(400,415)"><rect x="-30" y="-12" width="60" height="24" rx="4" fill="#fff" opacity="0.95" filter="url(#sh2)"/><text y="0" fill="#000">β = 0.281</text></g>
+        <g transform="translate(220,205)"><rect x="-30" y="-12" width="60" height="24" rx="4" fill="#fff" opacity="0.95" filter="url(#sh2)"/><text y="0" fill="#e74c3c">β = 0.071</text></g>
+        <g transform="translate(620,220)"><rect x="-30" y="-12" width="60" height="24" rx="4" fill="#fff" opacity="0.95" filter="url(#sh2)"/><text y="0" fill="#e74c3c">β = 0.188</text></g>
+      </g>
+    </svg>
+  `;
+}
+
+/* ---------- شکل ۳: Bootstrapping (با t-values) ---------- */
+function drawSmartPLSBootstrapping() {
+  const el = document.getElementById('smartpls-graphic-3');
+  if (!el) return;
+  el.innerHTML = `
+    <svg viewBox="0 0 850 600" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; font-family:'Vazirmatn',Tahoma,sans-serif; direction:rtl;">
+      <defs>
+        <marker id="m3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8b94a7"/></marker>
+        <marker id="m4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#e74c3c"/></marker>
+        <filter id="sh3" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.2"/></filter>
+      </defs>
+      <line x1="235.7" y1="346.7" x2="354.2" y2="225.3" stroke="#8b94a7" stroke-width="2.5" marker-end="url(#m3)"/>
+      <line x1="445.8" y1="225.3" x2="564.3" y2="346.7" stroke="#8b94a7" stroke-width="2.5" marker-end="url(#m3)"/>
+      <line x1="270" y1="400" x2="530" y2="400" stroke="#8b94a7" stroke-width="2.5" marker-end="url(#m3)"/>
+      <line x1="150" y1="150" x2="295" y2="275" stroke="#e74c3c" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#m4)"/>
+      <line x1="700" y1="150" x2="520" y2="310" stroke="#e74c3c" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#m4)"/>
+      <g filter="url(#sh3)">
+        <circle cx="200" cy="400" r="70" fill="#e67e22"/>
+        <circle cx="400" cy="180" r="70" fill="#9b59b6"/>
+        <circle cx="600" cy="400" r="70" fill="#27ae60"/>
+        <rect x="80" y="80" width="140" height="70" rx="10" fill="#3498db"/>
+        <rect x="630" y="80" width="140" height="70" rx="10" fill="#f39c12"/>
+      </g>
+      <g font-size="15" font-weight="bold" text-anchor="middle" fill="#fff">
+        <text x="400" y="180"><tspan x="400" dy="-0.3em">مدیریت</tspan><tspan x="400" dy="1.4em">دانش</tspan></text>
+        <text x="200" y="400"><tspan x="200" dy="-0.3em">استراتژی</tspan><tspan x="200" dy="1.4em">دیجیتال</tspan></text>
+        <text x="600" y="400"><tspan x="600" dy="-0.3em">موفقیت تحول</tspan><tspan x="600" dy="1.4em">دیجیتال</tspan></text>
+        <text x="150" y="115"><tspan x="150" dy="-0.3em">رهبری تحول</tspan><tspan x="150" dy="1.4em">دیجیتال</tspan></text>
+        <text x="700" y="115"><tspan x="700" dy="-0.3em">چابکی</tspan><tspan x="700" dy="1.4em">استراتژیک</tspan></text>
+      </g>
+      <!-- t-values -->
+      <g font-size="13" font-weight="bold" text-anchor="middle" font-family="Tahoma">
+        <g transform="translate(285,275)"><rect x="-30" y="-12" width="60" height="24" rx="4" fill="#fff" opacity="0.95" filter="url(#sh3)"/><text y="0" fill="#27ae60">t = 3.79</text></g>
+        <g transform="translate(515,275)"><rect x="-30" y="-12" width="60" height="24" rx="4" fill="#fff" opacity="0.95" filter="url(#sh3)"/><text y="0" fill="#27ae60">t = 3.75</text></g>
+        <g transform="translate(400,415)"><rect x="-30" y="-12" width="60" height="24" rx="4" fill="#fff" opacity="0.95" filter="url(#sh3)"/><text y="0" fill="#27ae60">t = 4.68</text></g>
+        <g transform="translate(220,205)"><rect x="-30" y="-12" width="60" height="24" rx="4" fill="#fff" opacity="0.95" filter="url(#sh3)"/><text y="0" fill="#e74c3c">t = 1.28</text></g>
+        <g transform="translate(620,220)"><rect x="-30" y="-12" width="60" height="24" rx="4" fill="#fff" opacity="0.95" filter="url(#sh3)"/><text y="0" fill="#27ae60">t = 2.85</text></g>
+      </g>
+    </svg>
+  `;
+}
+/* ================================================================
+   ۵۸. Causal ML — توابع کمکی
+   ================================================================ */
+function buildAdvancedChartCard(opts) {
+  const badgesHtml = (opts.badges || []).map(b => `<span class="chart-badge badge-${b.type}">${b.label}</span>`).join('');
+  const legendHtml = opts.legend ? `<div class="legend-table">${opts.legend}</div>` : '';
+  const panelId = opts.id + '-panel';
+  return `
+    <div class="chart-card">
+      <div class="chart-title"><span>${opts.title}</span><div>${badgesHtml}</div></div>
+      <div id="${opts.id}" class="plot ${opts.height || ''}"></div>
+      <div class="chart-toolbar">
+        <button class="btn-interpretation" onclick="togglePanel('${panelId}', this)">
+          <span class="icon-bulb">💡</span><span>${ti('show_btn')}</span>
+        </button>
+        <button class="dl-btn" onclick="downloadChart('${opts.id}', '${opts.id}')">⬇ PNG</button>
+      </div>
+      <div class="interpretation-panel" id="${panelId}">
+        <div class="interpretation-content">
+          <div class="interp-header"><span class="interp-header-icon">📊</span><span class="interp-title">${ti('title_chart')}</span></div>
+          <div class="interp-body"><div class="interp-item">${opts.interp}</div><div class="interp-item" style="border-right-color:#8e44ad;"><span class="interp-label">${ti('test_label')}:</span> ${opts.test}</div></div>
+        </div>
+      </div>
+      ${legendHtml}
+      <div class="data-source"><strong>${state.lang==='fa'?'📁 منبع:':'📁 Source:'}</strong> ${opts.source}</div>
+    </div>
+  `;
+}
+
+function cmInterp(n) {
+  const fa = {
+    1: `<strong>نوع نمودار:</strong> هیستوگرام توزیع CATE (اثر علّی شرطی) — ۱۸۰ تخمین<br><strong>مقادیر کلیدی:</strong> دامنه = [0.27 , 0.70] · میانگین = 0.48 · انحراف معیار ≈ 0.08<br><br><em>چه می‌بینیم:</em> توزیع CATE دوقطبی است — دو گروه متمایز: زنانی با اثر ضعیف (~0.27) و زنانی با اثر قوی (~0.60).<br><div class="reason-text"><strong>ارتباط با هدف:</strong> «اثر متوسط 0.48» گمراه‌کننده است. سیاست‌گذاری باید بر اساس CATE باشد، نه ATE.</div>`,
+    2: `<strong>نوع نمودار:</strong> CATE مرتب‌شده — ۱۸۰ تخمین به ترتیب صعودی<br><br><em>چه می‌بینیم:</em> شکل پلکانی نشان می‌دهد نمونه به دو گروه طبیعی تقسیم می‌شود: ~۹۰ نفر با اثر پایین و ~۹۰ نفر با اثر بالا.<br><div class="reason-text"><strong>ارتباط با هدف:</strong> امکان هدف‌گیری دقیق: تمرکز بر ۵۰٪ بالای نمودار بازدهی ۲ برابری دارد.</div>`,
+    3: `<strong>نوع نمودار:</strong> ستون‌های سه‌بعدی CATE بر اساس چارک‌های DS<br><strong>مقادیر:</strong> DS-Q1 = 0.449 · DS-Q2 = 0.478 · DS-Q3 = 0.479 · DS-Q4 = 0.503 · نسبت Q4/Q1 = 1.12×<br><br><em>چه می‌بینیم:</em> روند صعودی یکنوا — هرچه DS بالاتر، CATE بالاتر. تفاوت ۱۲٪ بین چارک اول و چهارم معنادار است.<br><div class="reason-text"><strong>ارتباط با هدف:</strong> استراتژی دیجیتال، تعدیل‌گر مثبت است. تقویت DS، اثر رهبری بر موفقیت را افزایش می‌دهد.</div>`,
+    4: `<strong>نوع نمودار:</strong> CATE در ۱۰ بازه DS با CI ۹۵٪<br><br><em>چه می‌بینیم:</em> روند صعودی با بازه‌های اطمینان غیرهم‌پوشان در دو انتها — یعنی تفاوت اثر در DS پایین و بالا واقعی است.<br><div class="reason-text"><strong>ارتباط با هدف:</strong> شاهد آماری بر سیستماتیک بودن ناهمگونی CATE.</div>`,
+    5: `<strong>نوع نمودار:</strong> PDP (Partial Dependence Plot) — اثر خالص DS بر CATE با کنترل DKM<br><br><em>چه می‌بینیم:</em> منحنی از 0.40 در DS=1 به 0.55 در DS=5 می‌رسد — شیب مثبت و یکنوا.<br><div class="reason-text"><strong>ارتباط با هدف:</strong> DS حتی پس از کنترل DKM، اثر مستقل دارد. سیاست‌گذاری نمی‌تواند DS را نادیده بگیرد.</div>`,
+    6: `<strong>نوع نمودار:</strong> جعبه‌ای CATE بر اساس چارک‌های DKM<br><strong>مقادیر:</strong> DKM-Q1 ≈ 0.45 · DKM-Q2 ≈ 0.47 · DKM-Q3 ≈ 0.48 · DKM-Q4 ≈ 0.50<br><br><em>چه می‌بینیم:</em> روند صعودی ملایم — DKM نیز تعدیل‌گر است اما اثر آن کمتر از DS است.<br><div class="reason-text"><strong>ارتباط با هدف:</strong> هر دو DS و DKM تعدیل‌گرند — سیاست‌گذاری باید هم‌زمان باشد.</div>`,
+    7: `<strong>نوع نمودار:</strong> پراکندگی سه‌بعدی CATE بر اساس DS و DKM<br><br><em>چه می‌بینیم:</em> الگوی قطری — نقاط با DS بالا و DKM بالا، CATE بالاتری دارند. تعامل هم‌افزا.<br><div class="reason-text"><strong>ارتباط با هدف:</strong> تأیید تعامل DS×DKM. تقویت هم‌زمان بازدهی بیشتری دارد.</div>`,
+    8: `<strong>نوع نمودار:</strong> سطح پیوسته CATE (درون‌یابی IDW)<br><br><em>چه می‌بینیم:</em> سطح صعودی از گوشه پایین-چپ به بالا-راست.<br><div class="reason-text"><strong>ارتباط با هدف:</strong> امکان پیش‌بینی CATE برای هر ترکیب DS و DKM.</div>`,
+    9: `<strong>نوع نمودار:</strong> اهمیت متغیرها (Feature Importance)<br><strong>مقادیر:</strong> DS = 0.888 · DKM = 0.112<br><br><em>چه می‌بینیم:</em> DS ۸۸٪ از ناهمگونی را توضیح می‌دهد — DKM سهم کوچک‌تری دارد.<br><div class="reason-text"><strong>ارتباط با هدف:</strong> اولویت سیاستی: تقویت DS.</div>`,
+    10: `<strong>نوع نمودار:</strong> گیج BLP R²<br><strong>مقادیر:</strong> R² = 0.060 · Calibration p-value = 0.031<br><br><em>چه می‌بینیم:</em> R² پایین (0.06) اما کالیبراسیون معنادار (p<0.05).<br><div class="reason-text"><strong>ارتباط با هدف:</strong> ناهمگونی کشف‌شده «واقعی» است، اما بخش زیادی از واریانس CATE توسط DS و DKM توضیح داده نمی‌شود.</div>`,
+    11: `<strong>نوع نمودار:</strong> منحنی TOC — مقایسه مدل با تخصیص تصادفی<br><br><em>چه می‌بینیم:</em> منحنی مدل بالای خط تصادفی — مدل می‌داند چه کسی را هدف بگیرد.<br><div class="reason-text"><strong>ارتباط با هدف:</strong> هدف‌گیری هوشمند تا ۲۰٪ بازدهی بیشتر از توزیع یکنواخت دارد.</div>`,
+    12: `<strong>نوع نمودار:</strong> منحنی Qini — کیفیت رتبه‌بندی<br><br><em>چه می‌بینیم:</em> منحنی مدل کاملاً بالای خط تصادفی — Qini مثبت.<br><div class="reason-text"><strong>ارتباط با هدف:</strong> مدل قادر است افراد با اثر بالا را از اثر پایین تفکیک کند.</div>`
+  };
+  const en = {
+    1: `<strong>Chart type:</strong> CATE distribution histogram — 180 estimates<br><strong>Key values:</strong> range [0.27, 0.70], mean=0.48, SD≈0.08<br><br><em>What we see:</em> Bimodal distribution — two distinct groups: weak effect (~0.27) and strong effect (~0.60).<br><div class="reason-text"><strong>Link to goal:</strong> The "average effect 0.48" is misleading. Policy must target CATE, not ATE.</div>`,
+    2: `<strong>Chart type:</strong> Ranked CATE — 180 estimates sorted ascending<br><br><em>What we see:</em> Stepwise shape reveals two natural groups: ~90 with low effect, ~90 with high effect.<br><div class="reason-text"><strong>Link to goal:</strong> Precision targeting: focus on top 50% yields double the return.</div>`,
+    3: `<strong>Chart type:</strong> 3D columns of CATE across DS quartiles<br><strong>Key values:</strong> DS-Q1=0.449, DS-Q2=0.478, DS-Q3=0.479, DS-Q4=0.503, Q4/Q1=1.12×<br><br><em>What we see:</em> Monotonic increase — higher DS, higher CATE. 12% difference between Q1 and Q4 is meaningful.<br><div class="reason-text"><strong>Link to goal:</strong> Digital strategy positively moderates. Strengthening DS amplifies leadership effect.</div>`,
+    4: `<strong>Chart type:</strong> CATE across 10 DS bins with 95% CI<br><br><em>What we see:</em> Upward trend with non-overlapping CIs at extremes — difference is real.<br><div class="reason-text"><strong>Link to goal:</strong> Statistical evidence that heterogeneity is systematic.</div>`,
+    5: `<strong>Chart type:</strong> PDP — net effect of DS on CATE controlling for DKM<br><br><em>What we see:</em> Curve rises from 0.40 at DS=1 to 0.55 at DS=5 — positive monotonic slope.<br><div class="reason-text"><strong>Link to goal:</strong> DS has independent effect even after controlling DKM. Policy cannot ignore DS.</div>`,
+    6: `<strong>Chart type:</strong> Box plot of CATE by DKM quartiles<br><strong>Key values:</strong> DKM-Q1≈0.45, Q2≈0.47, Q3≈0.48, Q4≈0.50<br><br><em>What we see:</em> Mild upward trend — DKM is also a moderator but weaker than DS.<br><div class="reason-text"><strong>Link to goal:</strong> Both DS and DKM moderate — policy should address both.</div>`,
+    7: `<strong>Chart type:</strong> 3D scatter of CATE by DS and DKM<br><br><em>What we see:</em> Diagonal pattern — high DS + high DKM yields higher CATE. Synergistic interaction.<br><div class="reason-text"><strong>Link to goal:</strong> Confirms DS×DKM interaction. Simultaneous strengthening yields higher returns.</div>`,
+    8: `<strong>Chart type:</strong> Continuous CATE surface (IDW interpolation)<br><br><em>What we see:</em> Surface rises from lower-left to upper-right.<br><div class="reason-text"><strong>Link to goal:</strong> Enables CATE prediction for any DS and DKM combination.</div>`,
+    9: `<strong>Chart type:</strong> Feature Importance<br><strong>Key values:</strong> DS=0.888, DKM=0.112<br><br><em>What we see:</em> DS explains 88% of heterogeneity — DKM has smaller share.<br><div class="reason-text"><strong>Link to goal:</strong> Policy priority: strengthen DS.</div>`,
+    10: `<strong>Chart type:</strong> BLP R² gauge<br><strong>Key values:</strong> R²=0.060, Calibration p=0.031<br><br><em>What we see:</em> Low R² (0.06) but significant calibration (p<0.05).<br><div class="reason-text"><strong>Link to goal:</strong> Discovered heterogeneity is "real", but much variance in CATE remains unexplained.</div>`,
+    11: `<strong>Chart type:</strong> TOC curve — model vs random allocation<br><br><em>What we see:</em> Model curve above random — model knows whom to target.<br><div class="reason-text"><strong>Link to goal:</strong> Smart targeting yields up to 20% more return than uniform distribution.</div>`,
+    12: `<strong>Chart type:</strong> Qini curve — ranking quality<br><br><em>What we see:</em> Model curve entirely above random — positive Qini.<br><div class="reason-text"><strong>Link to goal:</strong> Model can separate high-effect from low-effect individuals.</div>`
+  };
+  return (state.lang === 'fa' ? fa : en)[n] || '';
+}
+
+/* ================================================================
+   ۵۹. Causal ML — رسم همه نمودارها
+   ================================================================ */
+function renderCausalMLSection() {
+  const container = document.getElementById('cm-charts-container');
+  if (!container) return;
+  const cf = (state.loaded && state.loaded.causalForest) || FALLBACK_CAUSAL_FOREST;
+  const isFa = state.lang === 'fa';
+  const b3d = [{type:'3d', label: isFa ? '۳بعدی' : '3D'}];
+  const b2d = [{type:'2d', label: isFa ? '۲بعدی' : '2D'}];
+  const star = [{type:'star', label:'⭐'}];
+
+  const sources = [
+    'electric_bicycle_causal_forest.xlsx → CATE_Distribution',
+    'electric_bicycle_causal_forest.xlsx → CATE_Distribution (sorted)',
+    'electric_bicycle_causal_forest.xlsx → HG_Quartiles',
+    'electric_bicycle_causal_forest.xlsx → Full_Data (DS, CATE)',
+    'electric_bicycle_causal_forest.xlsx → Full_Data (DS, DKM, CATE)',
+    'electric_bicycle_causal_forest.xlsx → Full_Data (DKM, CATE)',
+    'electric_bicycle_causal_forest.xlsx → Full_Data (DS, DKM, CATE)',
+    'electric_bicycle_causal_forest.xlsx → Full_Data (IDW)',
+    'electric_bicycle_causal_forest.xlsx → Feature_Importance',
+    'electric_bicycle_causal_forest.xlsx → Overview',
+    'electric_bicycle_causal_forest.xlsx → Full_Data (CATE)',
+    'electric_bicycle_causal_forest.xlsx → Full_Data (CATE)'
+  ];
+  const cards = [
+    {id:'cm-1',n:1,badges:[...b3d,...star],height:'tall'},
+    {id:'cm-2',n:2,badges:b2d},
+    {id:'cm-3',n:3,badges:b3d,height:'tall'},
+    {id:'cm-4',n:4,badges:b2d},
+    {id:'cm-5',n:5,badges:b2d},
+    {id:'cm-6',n:6,badges:b2d},
+    {id:'cm-7',n:7,badges:[...b3d,...star],height:'xtall'},
+    {id:'cm-8',n:8,badges:b3d,height:'xtall'},
+    {id:'cm-9',n:9,badges:b2d},
+    {id:'cm-10',n:10,badges:b2d},
+    {id:'cm-11',n:11,badges:[...b2d,...star]},
+    {id:'cm-12',n:12,badges:b2d}
+  ];
+  const legends = {
+    1:'<span class="legend-item"><span class="legend-color" style="background:linear-gradient(135deg,#0d0887,#f0f921)"></span>Plasma</span>',
+    3:'<span class="legend-item"><span class="legend-color" style="background:#e74c3c"></span>DS-Q1</span><span class="legend-item"><span class="legend-color" style="background:#f39c12"></span>DS-Q2</span><span class="legend-item"><span class="legend-color" style="background:#3498db"></span>DS-Q3</span><span class="legend-item"><span class="legend-color" style="background:#27ae60"></span>DS-Q4</span>',
+    6:'<span class="legend-item"><span class="legend-color" style="background:#e74c3c"></span>DKM-Q1</span><span class="legend-item"><span class="legend-color" style="background:#f39c12"></span>DKM-Q2</span><span class="legend-item"><span class="legend-color" style="background:#3498db"></span>DKM-Q3</span><span class="legend-item"><span class="legend-color" style="background:#27ae60"></span>DKM-Q4</span>',
+    11:'<span class="legend-item"><span class="legend-line" style="background:#27ae60"></span>Model</span><span class="legend-item"><span class="legend-line" style="background:#e74c3c"></span>Random</span>',
+    12:'<span class="legend-item"><span class="legend-line" style="background:#9b59b6"></span>Model</span><span class="legend-item"><span class="legend-line" style="background:#e74c3c"></span>Random</span>'
+  };
+
+  let html = '<div class="cm-grid">';
+  cards.forEach(card => {
+    const title = I18N[state.lang]['cm_chart_' + card.n + '_title'] || ('Chart ' + card.n);
+    html += buildAdvancedChartCard({
+      id: card.id, title: title, badges: card.badges, height: card.height,
+      interp: cmInterp(card.n), source: sources[card.n - 1] || '',
+      test: 'Causal Forest DML', legend: legends[card.n] || null
+    });
+  });
+  html += '</div>';
+  container.innerHTML = html;
+
+  // رسم نمودارها
+  plotCM1_3DHist(cf); plotCM2_Ranked(cf); plotCM3_3DDS(cf); plotCM4_Binned(cf);
+  plotCM5_PDP(cf); plotCM6_BoxDKM(cf); plotCM7_3DScatter(cf); plotCM8_3DSurface(cf);
+  plotCM9_FeatImp(cf); plotCM10_BLP(cf); plotCM11_TOC(cf); plotCM12_Qini(cf);
+}
+
+/* ================================================================
+   ۶۰. توابع رسم ۱۲ نمودار
+   ================================================================ */
+function plotCM1_3DHist(cf) {
+  const r = cf.CATE_Distribution || [];
+  const vals = r.map(d => d.CATE).filter(v => v != null);
+  if (!vals.length) return;
+  const NB = 20, min = Math.min(...vals), max = Math.max(...vals), bw = (max - min) / NB;
+  const bins = Array(NB).fill(0);
+  vals.forEach(v => { const i = Math.min(Math.floor((v - min) / bw), NB - 1); bins[i]++; });
+  const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+  const xs = [], ys = [], zs = [];
+  bins.forEach((c, i) => { const xc = min + bw * (i + 0.5); xs.push(xc, xc, null); ys.push(0, 0, null); zs.push(0, c, null); });
+  const sc = { xaxis: { title: 'CATE', gridcolor: themeColors().grid }, yaxis: { showticklabels: false, range: [-1, 1], gridcolor: themeColors().grid }, zaxis: { title: 'Freq', gridcolor: themeColors().grid }, camera: { eye: { x: 1.6, y: -1.6, z: 0.9 } } };
+  Plotly.newPlot('cm-1', [
+    { type: 'scatter3d', mode: 'lines', x: xs, y: ys, z: zs, line: { color: '#3498db', width: 6 }, hoverinfo: 'skip', showlegend: false },
+    { type: 'scatter3d', mode: 'markers', x: bins.map((_, i) => min + bw * (i + 0.5)), y: bins.map(() => 0), z: bins, marker: { size: bins.map(c => 8 + c * 0.5), color: bins.map((_, i) => min + bw * (i + 0.5)), colorscale: 'Plasma', line: { color: '#fff', width: 1 } }, hovertemplate: 'CATE: %{x:.3f}<br>Freq: %{z}<extra></extra>', showlegend: false },
+    { type: 'scatter3d', mode: 'lines', x: [mean, mean], y: [0, 0], z: [0, Math.max(...bins) * 1.1], line: { color: '#e74c3c', width: 6, dash: 'dash' }, hoverinfo: 'skip', showlegend: false }
+  ], plotlyLayout({ scene: sc, showlegend: false, margin: { l: 0, r: 0, t: 10, b: 0 } }), PLOTLY_CFG);
+}
+
+function plotCM2_Ranked(cf) {
+  const r = cf.CATE_Distribution || [];
+  const vals = r.map(d => d.CATE).filter(v => v != null).sort((a, b) => a - b);
+  if (!vals.length) return;
+  Plotly.newPlot('cm-2', [{ type: 'scatter', mode: 'lines', x: vals.map((_, i) => i + 1), y: vals, line: { color: '#3498db', width: 2 }, fill: 'tozeroy', fillcolor: 'rgba(52,152,219,0.15)', hovertemplate: 'Rank: %{x}<br>CATE: %{y:.4f}<extra></extra>' }], plotlyLayout({ xaxis: { title: 'Rank', gridcolor: themeColors().grid }, yaxis: { title: 'CATE', gridcolor: themeColors().grid }, shapes: [{ type: 'line', x0: 0, x1: vals.length, y0: 0.333, y1: 0.333, line: { color: '#e74c3c', dash: 'dash', width: 2 } }, { type: 'line', x0: 0, x1: vals.length, y0: 0.533, y1: 0.533, line: { color: '#27ae60', dash: 'dash', width: 2 } }] }), PLOTLY_CFG);
+}
+
+function plotCM3_3DDS(cf) {
+  const r = cf.HG_Quartiles || [];
+  if (!r.length) return;
+  const vals = r.map(d => d.Mean_CATE), sds = r.map(d => d.SD_CATE), labels = r.map(d => d.HG_Quartile);
+  const colors = ['#e74c3c', '#f39c12', '#3498db', '#27ae60'];
+  const xs = [], ys = [], zs = [];
+  vals.forEach((v, i) => { xs.push(i, i, null); ys.push(0, 0, null); zs.push(0, v, null); });
+  const sc = { xaxis: { title: '', tickvals: [0, 1, 2, 3], ticktext: labels, gridcolor: themeColors().grid }, yaxis: { showticklabels: false, range: [-1, 1], gridcolor: themeColors().grid }, zaxis: { title: 'CATE', gridcolor: themeColors().grid }, camera: { eye: { x: 1.6, y: -1.6, z: 0.9 } } };
+  Plotly.newPlot('cm-3', [
+    { type: 'scatter3d', mode: 'lines', x: xs, y: ys, z: zs, line: { color: '#7f8c9c', width: 8 }, hoverinfo: 'skip', showlegend: false },
+    { type: 'scatter3d', mode: 'markers', x: vals.map((_, i) => i), y: vals.map(() => 0), z: vals, marker: { size: 22, color: colors, line: { color: '#fff', width: 2 } }, text: labels, customdata: r.map(d => [d.N, d.SD_CATE]), hovertemplate: '<b>%{text}</b><br>CATE: %{z:.4f}<br>N: %{customdata[0]}<extra></extra>', showlegend: false },
+    { type: 'scatter3d', mode: 'lines', x: vals.flatMap((_, i) => [i, i, null]), y: vals.flatMap(() => [0, 0, null]), z: vals.flatMap((v, i) => [v - sds[i], v + sds[i], null]), line: { color: '#e8ecf1', width: 3 }, hoverinfo: 'skip', showlegend: false }
+  ], plotlyLayout({ scene: sc, showlegend: false, margin: { l: 0, r: 0, t: 10, b: 0 } }), PLOTLY_CFG);
+}
+
+function plotCM4_Binned(cf) {
+  const r = cf.Full_Data || [];
+  if (!r.length) return;
+  const hg = r.map(d => d.HG_score), cate = r.map(d => d.CATE);
+  const bins = 10, min = Math.min(...hg), max = Math.max(...hg), bw = (max - min) / bins, bd = [];
+  for (let i = 0; i < bins; i++) {
+    const lo = min + i * bw, hi = min + (i + 1) * bw, inB = [];
+    cate.forEach((c, j) => { if (hg[j] >= lo && hg[j] < hi) inB.push(c); });
+    if (inB.length > 0) { const mean = inB.reduce((a, b) => a + b, 0) / inB.length; const sd = Math.sqrt(inB.reduce((a, b) => a + (b - mean) ** 2, 0) / inB.length); bd.push({ x: (lo + hi) / 2, mean, se: 1.96 * sd / Math.sqrt(inB.length), n: inB.length }); }
+  }
+  Plotly.newPlot('cm-4', [{ type: 'scatter', mode: 'lines+markers', x: bd.map(b => b.x), y: bd.map(b => b.mean), marker: { size: 12, color: '#3498db' }, line: { color: '#3498db', width: 2 }, error_y: { type: 'data', array: bd.map(b => b.se), color: '#e8ecf1', thickness: 2, width: 6 }, customdata: bd.map(b => b.n), hovertemplate: 'DS: %{x:.2f}<br>CATE: %{y:.4f}<br>N: %{customdata}<extra></extra>' }], plotlyLayout({ xaxis: { title: 'DS', gridcolor: themeColors().grid }, yaxis: { title: 'CATE (95% CI)', gridcolor: themeColors().grid } }), PLOTLY_CFG);
+}
+
+function plotCM5_PDP(cf) {
+  const r = cf.Full_Data || [];
+  if (!r.length) return;
+  const hg = r.map(d => d.HG_score), pr = r.map(d => d.PR_score), cate = r.map(d => d.CATE);
+  const medPR = [...pr].sort((a, b) => a - b)[Math.floor(pr.length / 2)];
+  const minHG = Math.min(...hg), maxHG = Math.max(...hg);
+  const grid = Array.from({ length: 30 }, (_, i) => minHG + (maxHG - minHG) * i / 29);
+  const pdp = grid.map(h => { let ws = 0, vs = 0; for (let i = 0; i < hg.length; i++) { const dHg = Math.abs(hg[i] - h), dPr = Math.abs(pr[i] - medPR); if (dHg < 0.5) { const w = 1 / (1 + dHg * dHg + dPr * dPr); ws += w; vs += w * cate[i]; } } return ws > 0 ? vs / ws : null; });
+  Plotly.newPlot('cm-5', [{ type: 'scatter', mode: 'lines+markers', x: grid, y: pdp, line: { color: '#27ae60', width: 3 }, marker: { size: 6, color: '#27ae60' }, fill: 'tozeroy', fillcolor: 'rgba(39,174,96,0.15)', hovertemplate: 'DS: %{x:.2f}<br>Effect: %{y:.4f}<extra></extra>' }], plotlyLayout({ xaxis: { title: 'DS (DKM at median)', gridcolor: themeColors().grid }, yaxis: { title: 'PDP Effect', gridcolor: themeColors().grid } }), PLOTLY_CFG);
+}
+
+function plotCM6_BoxDKM(cf) {
+  const r = cf.Full_Data || [];
+  if (!r.length) return;
+  const pr = r.map(d => d.PR_score).sort((a, b) => a - b);
+  const q1 = pr[Math.floor(pr.length * 0.25)], q2 = pr[Math.floor(pr.length * 0.5)], q3 = pr[Math.floor(pr.length * 0.75)];
+  const groups = { 'DKM-Q1': [], 'DKM-Q2': [], 'DKM-Q3': [], 'DKM-Q4': [] };
+  r.forEach(d => { if (d.PR_score <= q1) groups['DKM-Q1'].push(d.CATE); else if (d.PR_score <= q2) groups['DKM-Q2'].push(d.CATE); else if (d.PR_score <= q3) groups['DKM-Q3'].push(d.CATE); else groups['DKM-Q4'].push(d.CATE); });
+  const colors = ['#e74c3c', '#f39c12', '#3498db', '#27ae60'];
+  Plotly.newPlot('cm-6', Object.entries(groups).map(([n, v], i) => ({ type: 'box', y: v, name: n, boxmean: 'sd', marker: { color: colors[i] } })), plotlyLayout({ yaxis: { title: 'CATE', gridcolor: themeColors().grid }, xaxis: { title: 'DKM Quartile', gridcolor: themeColors().grid }, showlegend: false }), PLOTLY_CFG);
+}
+
+function plotCM7_3DScatter(cf) {
+  const r = cf.Full_Data || [];
+  if (!r.length) return;
+  const sc = { xaxis: { title: 'DS', gridcolor: themeColors().grid }, yaxis: { title: 'DKM', gridcolor: themeColors().grid }, zaxis: { title: 'CATE', gridcolor: themeColors().grid }, camera: { eye: { x: 1.6, y: -1.6, z: 0.9 } } };
+  Plotly.newPlot('cm-7', [{ type: 'scatter3d', mode: 'markers', x: r.map(d => d.HG_score), y: r.map(d => d.PR_score), z: r.map(d => d.CATE), marker: { size: 4, color: r.map(d => d.CATE), colorscale: 'Plasma', colorbar: { title: 'CATE', thickness: 15, tickfont: { color: themeColors().text } } }, text: r.map(d => d.HG_Quartile), hovertemplate: 'DS: %{x:.2f}<br>DKM: %{y:.2f}<br>CATE: %{z:.3f}<extra></extra>' }], plotlyLayout({ scene: sc, showlegend: false, margin: { l: 0, r: 0, t: 10, b: 0 } }), PLOTLY_CFG);
+}
+
+function plotCM8_3DSurface(cf) {
+  const r = cf.Full_Data || [];
+  if (!r.length) return;
+  const hg = r.map(d => d.HG_score), pr = r.map(d => d.PR_score), cate = r.map(d => d.CATE);
+  const NX = 30, NY = 30, xg = [], yg = [];
+  const hgMin = Math.min(...hg), hgMax = Math.max(...hg), prMin = Math.min(...pr), prMax = Math.max(...pr);
+  for (let i = 0; i < NX; i++) xg.push(hgMin + (hgMax - hgMin) * i / (NX - 1));
+  for (let j = 0; j < NY; j++) yg.push(prMin + (prMax - prMin) * j / (NY - 1));
+  const Z = yg.map(y => xg.map(x => { let ws = 0, vs = 0; for (let i = 0; i < hg.length; i++) { const d2 = (hg[i] - x) ** 2 + (pr[i] - y) ** 2 + 0.01, w = 1 / d2; ws += w; vs += w * cate[i]; } return vs / ws; }));
+  const sc = { xaxis: { title: 'DS', gridcolor: themeColors().grid }, yaxis: { title: 'DKM', gridcolor: themeColors().grid }, zaxis: { title: 'CATE', gridcolor: themeColors().grid }, camera: { eye: { x: 1.6, y: -1.6, z: 0.9 } } };
+  Plotly.newPlot('cm-8', [{ type: 'surface', x: xg, y: yg, z: Z, colorscale: 'Plasma', colorbar: { title: 'CATE', thickness: 15, tickfont: { color: themeColors().text } }, contours: { z: { show: true, usecolormap: true, highlightcolor: '#fff', project: { z: true } } } }], plotlyLayout({ scene: sc, showlegend: false, margin: { l: 0, r: 0, t: 10, b: 0 } }), PLOTLY_CFG);
+}
+
+function plotCM9_FeatImp(cf) {
+  const r = cf.Feature_Importance || [];
+  if (!r.length) return;
+  Plotly.newPlot('cm-9', [{ type: 'bar', orientation: 'h', y: r.map(d => d.Variable), x: r.map(d => d.Importance), marker: { color: ['#e67e22', '#9b59b6'], line: { color: '#fff', width: 2 } }, text: r.map(d => d.Importance.toFixed(3)), textposition: 'outside', hovertemplate: '<b>%{y}</b><br>Importance: %{x:.4f}<extra></extra>' }], plotlyLayout({ xaxis: { title: 'Importance', gridcolor: themeColors().grid, range: [0, 0.75] }, yaxis: { title: '', gridcolor: themeColors().grid }, margin: { l: 120, r: 60, t: 10, b: 50 } }), PLOTLY_CFG);
+}
+
+function plotCM10_BLP(cf) {
+  const ov = cf.OverviewObj || (cf.Overview || []).reduce((o, r) => { o[r.Metric] = r.Value; return o; }, {});
+  const r2 = parseFloat(ov.BLP_R2 || 0.060);
+  const calibP = parseFloat(ov.Calibration_Test_Pval != null ? ov.Calibration_Test_Pval : 0.031);
+  const calibStatus = ov.Calibration_Status || (calibP < 0.05 ? '✅ Well-calibrated (p < 0.05)' : '⚠ Not calibrated');
+  const calibColor = calibP < 0.05 ? '#27ae60' : '#e74c3c';
+  Plotly.newPlot('cm-10', [{ type: 'indicator', mode: 'gauge+number', value: r2, number: { font: { size: 44, color: themeColors().text }, valueformat: '.4f' }, gauge: { axis: { range: [0, 1], tickwidth: 1, tickcolor: themeColors().text, tickfont: { color: themeColors().text } }, bar: { color: '#27ae60', thickness: 0.7 }, bgcolor: themeColors().plot, borderwidth: 1, bordercolor: themeColors().grid, steps: [{ range: [0, 0.5], color: 'rgba(231,76,60,.2)' }, { range: [0.5, 0.7], color: 'rgba(243,156,18,.2)' }, { range: [0.7, 0.85], color: 'rgba(39,174,96,.2)' }, { range: [0.85, 1], color: 'rgba(39,174,96,.4)' }], threshold: { line: { color: '#e74c3c', width: 3 }, thickness: 0.75, value: 0.7 } } }], plotlyLayout({ margin: { l: 20, r: 20, t: 40, b: 20 }, annotations: [{ text: `Calibration p-value: ${calibP.toFixed(4)}<br><span style="color:${calibColor};font-weight:bold">${calibStatus}</span>`, x: 0.5, y: 0.05, xref: 'paper', yref: 'paper', showarrow: false, font: { size: 12, color: themeColors().text } }] }), PLOTLY_CFG);
+}
+
+function plotCM11_TOC(cf) {
+  const r = cf.Full_Data || [];
+  if (!r.length) return;
+  const cate = r.map(d => d.CATE);
+  const n = cate.length, ate = cate.reduce((a, b) => a + b, 0) / n;
+  const sorted = [...cate].sort((a, b) => b - a);
+  const cum = []; let s = 0;
+  for (let i = 0; i < n; i++) { s += sorted[i]; cum.push(s / n); }
+  const frac = cum.map((_, i) => (i + 1) / n);
+  const rand = frac.map(f => f * ate);
+  Plotly.newPlot('cm-11', [{ type: 'scatter', mode: 'lines', x: frac, y: cum, name: 'Model', line: { color: '#27ae60', width: 3 } }, { type: 'scatter', mode: 'lines', x: frac, y: rand, name: 'Random', line: { color: '#e74c3c', width: 3, dash: 'dash' } }], plotlyLayout({ xaxis: { title: 'Target fraction', gridcolor: themeColors().grid, tickformat: '.0%' }, yaxis: { title: 'Cumulative CATE', gridcolor: themeColors().grid }, legend: { x: 0.6, y: 0.05 } }), PLOTLY_CFG);
+}
+
+function plotCM12_Qini(cf) {
+  const r = cf.Full_Data || [];
+  if (!r.length) return;
+  const cate = r.map(d => d.CATE);
+  const sorted = [...cate].sort((a, b) => b - a);
+  const cum = []; let s = 0;
+  for (const v of sorted) { s += v; cum.push(s); }
+  const total = cum[cum.length - 1];
+  const frac = cum.map((_, i) => (i + 1) / cum.length);
+  const rand = frac.map(f => f * total);
+  Plotly.newPlot('cm-12', [{ type: 'scatter', mode: 'lines', x: frac, y: cum, name: 'Model', line: { color: '#9b59b6', width: 3 }, fill: 'tozeroy', fillcolor: 'rgba(155,89,182,0.15)' }, { type: 'scatter', mode: 'lines', x: frac, y: rand, name: 'Random', line: { color: '#e74c3c', width: 2, dash: 'dash' } }], plotlyLayout({ xaxis: { title: 'Sample fraction', gridcolor: themeColors().grid, tickformat: '.0%' }, yaxis: { title: 'Cumulative effect', gridcolor: themeColors().grid }, legend: { x: 0.6, y: 0.05 } }), PLOTLY_CFG);
+}
 /* ================================================================
    ۵۴. شروع همه چیز پس از بارگذاری DOM
    ================================================================ */
