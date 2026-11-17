@@ -4700,3 +4700,404 @@ async function downloadFile(filename) {
     );
   }
 }
+/* ================================================================
+   جداول تفصیلی مونت کارلو (MC Summary Tables)
+   ================================================================ */
+
+function renderMCSummaryTables() {
+    // 1. جدول فرضیه‌ها
+    let hHtml = `<div class="hyp-table-wrap"><table class="hyp-table"><thead><tr>
+        <th>فرضیه</th><th>مسیر</th><th>β (PLS)</th><th>میانگین (MC)</th><th>بازه ۹۵٪</th><th>وضعیت</th><th>نتیجه</th>
+    </tr></thead><tbody>`;
+    MC_DATA.hypotheses.forEach(d => {
+        const resCls = d.res === 'تأیید' ? 'hyp-res-confirmed' : 'hyp-res-rejected';
+        const resIcon = d.res === 'تأیید' ? '✓' : '✕';
+        hHtml += `<tr class="hyp-row mc-tooltip-row" data-tooltip="${d.tip}">
+            <td><span class="hyp-id-chip">${d.h}</span></td>
+            <td>${d.path}</td>
+            <td><span class="hyp-beta" style="background:#3498db">${d.pls.toFixed(3)}</span></td>
+            <td><span class="hyp-beta" style="background:#9b59b6">${d.mc.toFixed(4)}</span></td>
+            <td style="direction:ltr; font-family:tahoma">${d.ci}</td>
+            <td><span class="${d.sig === 'معنادار' ? 'hyp-p-sig' : 'hyp-p-ns'}">${d.sig}</span></td>
+            <td><span class="hyp-res ${resCls}"><span class="hyp-res-icon">${resIcon}</span>${d.res}</span></td>
+        </tr>`;
+    });
+    hHtml += `</tbody></table></div>`;
+    document.getElementById('mc-table-hypotheses').innerHTML = hHtml;
+
+    // 2. جدول سناریوها
+    let sHtml = `<div class="hyp-table-wrap"><table class="hyp-table"><thead><tr>
+        <th>سناریو</th><th>تعداد (N)</th><th>میانگین موفقیت</th><th>میانه (P50)</th><th>بازه ۹۰٪</th>
+    </tr></thead><tbody>`;
+    MC_DATA.scenarios.forEach(d => {
+        sHtml += `<tr class="hyp-row mc-tooltip-row" data-tooltip="${d.tip}">
+            <td><strong>${d.name}</strong></td>
+            <td>${d.n.toLocaleString()}</td>
+            <td><span class="hyp-beta" style="background:${d.mean>0?'#27ae60':'#e74c3c'}">${d.mean.toFixed(3)}</span></td>
+            <td>${d.median.toFixed(3)}</td>
+            <td style="direction:ltr; font-family:tahoma">${d.ci}</td>
+        </tr>`;
+    });
+    sHtml += `</tbody></table></div>`;
+    document.getElementById('mc-table-scenarios').innerHTML = sHtml;
+
+    // 3. جدول H6
+    let h6Html = `<div class="hyp-table-wrap"><table class="hyp-table"><thead><tr>
+        <th>Z-Score تحریم</th><th>وضعیت</th><th>ضریب H6</th><th>بازه ۹۰٪</th><th>نتیجه</th>
+    </tr></thead><tbody>`;
+    MC_DATA.h6.forEach(d => {
+        h6Html += `<tr class="hyp-row mc-tooltip-row" data-tooltip="${d.tip}">
+            <td><span class="vif-ind-chip">${d.z}</span></td>
+            <td>${d.desc}</td>
+            <td><span class="hyp-beta" style="background:${d.beta>0?'#27ae60':'#e74c3c'}">${d.beta.toFixed(3)}</span></td>
+            <td style="direction:ltr; font-family:tahoma">${d.ci}</td>
+            <td><span class="${d.sig.includes('معنادار') ? 'hyp-p-sig' : 'hyp-p-ns'}">${d.sig}</span></td>
+        </tr>`;
+    });
+    h6Html += `</tbody></table></div>`;
+    document.getElementById('mc-table-h6').innerHTML = h6Html;
+
+    // فعال‌سازی تولتیپ
+    bindMCTableTooltips();
+}
+
+function bindMCTableTooltips() {
+    let tooltip = document.getElementById('mc-row-tooltip');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'mc-row-tooltip';
+        tooltip.className = 'table-tooltip';
+        document.body.appendChild(tooltip);
+    }
+    document.querySelectorAll('.mc-tooltip-row').forEach(row => {
+        row.addEventListener('mouseenter', (e) => {
+            tooltip.innerHTML = `<div>${row.dataset.tooltip}</div>`;
+            tooltip.style.display = 'block';
+            positionTooltip(e, tooltip); // از تابع موجود در داشبورد استفاده می‌کند
+        });
+        row.addEventListener('mousemove', (e) => {
+            if (tooltip.style.display === 'block') positionTooltip(e, tooltip);
+        });
+        row.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+    });
+}
+/* ================================================================
+   بخش جدید: جداول تفصیلی مونت کارلو (MC Summary Tables)
+   ================================================================ */
+
+function renderMCSummaryTables() {
+    // 1. جدول فرضیه‌ها
+    let hHtml = `<div class="hyp-table-wrap"><table class="hyp-table"><thead><tr>
+        <th>فرضیه</th><th>مسیر</th><th>β (PLS)</th><th>میانگین (MC)</th><th>بازه ۹۵٪</th><th>وضعیت</th><th>نتیجه</th>
+    </tr></thead><tbody>`;
+    MC_DATA.hypotheses.forEach(d => {
+        const resCls = d.res === 'تأیید' ? 'hyp-res-confirmed' : 'hyp-res-rejected';
+        const resIcon = d.res === 'تأیید' ? '✓' : '✕';
+        hHtml += `<tr class="hyp-row mc-tooltip-row" data-tooltip="${d.tip}">
+            <td><span class="hyp-id-chip">${d.h}</span></td>
+            <td>${d.path}</td>
+            <td><span class="hyp-beta" style="background:#3498db">${d.pls.toFixed(3)}</span></td>
+            <td><span class="hyp-beta" style="background:#9b59b6">${d.mc.toFixed(4)}</span></td>
+            <td style="direction:ltr; font-family:tahoma">${d.ci}</td>
+            <td><span class="${d.sig === 'معنادار' ? 'hyp-p-sig' : 'hyp-p-ns'}">${d.sig}</span></td>
+            <td><span class="hyp-res ${resCls}"><span class="hyp-res-icon">${resIcon}</span>${d.res}</span></td>
+        </tr>`;
+    });
+    hHtml += `</tbody></table></div>`;
+    const elH = document.getElementById('mc-table-hypotheses');
+    if(elH) elH.innerHTML = hHtml;
+
+    // 2. جدول سناریوها
+    let sHtml = `<div class="hyp-table-wrap"><table class="hyp-table"><thead><tr>
+        <th>سناریو</th><th>تعداد (N)</th><th>میانگین موفقیت</th><th>میانه (P50)</th><th>بازه ۹۰٪</th>
+    </tr></thead><tbody>`;
+    MC_DATA.scenarios.forEach(d => {
+        sHtml += `<tr class="hyp-row mc-tooltip-row" data-tooltip="${d.tip}">
+            <td><strong>${d.name}</strong></td>
+            <td>${d.n.toLocaleString()}</td>
+            <td><span class="hyp-beta" style="background:${d.mean>0?'#27ae60':'#e74c3c'}">${d.mean.toFixed(3)}</span></td>
+            <td>${d.median.toFixed(3)}</td>
+            <td style="direction:ltr; font-family:tahoma">${d.ci}</td>
+        </tr>`;
+    });
+    sHtml += `</tbody></table></div>`;
+    const elS = document.getElementById('mc-table-scenarios');
+    if(elS) elS.innerHTML = sHtml;
+
+    // 3. جدول H6
+    let h6Html = `<div class="hyp-table-wrap"><table class="hyp-table"><thead><tr>
+        <th>Z-Score تحریم</th><th>وضعیت</th><th>ضریب H6</th><th>بازه ۹۰٪</th><th>نتیجه</th>
+    </tr></thead><tbody>`;
+    MC_DATA.h6.forEach(d => {
+        h6Html += `<tr class="hyp-row mc-tooltip-row" data-tooltip="${d.tip}">
+            <td><span class="vif-ind-chip">${d.z}</span></td>
+            <td>${d.desc}</td>
+            <td><span class="hyp-beta" style="background:${d.beta>0?'#27ae60':'#e74c3c'}">${d.beta.toFixed(3)}</span></td>
+            <td style="direction:ltr; font-family:tahoma">${d.ci}</td>
+            <td><span class="${d.sig.includes('معنادار') ? 'hyp-p-sig' : 'hyp-p-ns'}">${d.sig}</span></td>
+        </tr>`;
+    });
+    h6Html += `</tbody></table></div>`;
+    const elH6 = document.getElementById('mc-table-h6');
+    if(elH6) elH6.innerHTML = h6Html;
+
+    // فعال‌سازی تولتیپ
+    bindMCTableTooltips();
+}
+
+function bindMCTableTooltips() {
+    let tooltip = document.getElementById('mc-row-tooltip');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'mc-row-tooltip';
+        tooltip.className = 'table-tooltip';
+        document.body.appendChild(tooltip);
+    }
+    document.querySelectorAll('.mc-tooltip-row').forEach(row => {
+        row.addEventListener('mouseenter', (e) => {
+            tooltip.innerHTML = `<div>${row.dataset.tooltip}</div>`;
+            tooltip.style.display = 'block';
+            if(typeof positionTooltip === 'function') positionTooltip(e, tooltip);
+        });
+        row.addEventListener('mousemove', (e) => {
+            if (tooltip.style.display === 'block' && typeof positionTooltip === 'function') positionTooltip(e, tooltip);
+        });
+        row.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+    });
+}
+
+/* ================================================================
+   بخش جدید: جداول تفصیلی مونت کارلو (MC Summary Tables) - نسخه اصلاح‌شده
+   ================================================================ */
+const MC_TABLES_DATA = {
+    hypotheses: [
+        { h: 'H1', path: 'استراتژی ← دانش', pls: 0.281, mc: 0.2809, ci: '[0.163, 0.400]', sig: 'معنادار', res: 'تأیید', tip: 'اثر مستقیم استراتژی دیجیتال بر مدیریت دانش.' },
+        { h: 'H2', path: 'استراتژی ← موفقیت', pls: 0.241, mc: 0.2419, ci: '[0.117, 0.366]', sig: 'معنادار', res: 'تأیید', tip: 'اثر مستقیم استراتژی دیجیتال بر موفقیت تحول.' },
+        { h: 'H3', path: 'دانش ← موفقیت', pls: 0.270, mc: 0.2691, ci: '[0.130, 0.409]', sig: 'معنادار', res: 'تأیید', tip: 'اثر مستقیم مدیریت دانش بر موفقیت تحول.' },
+        { h: 'H4', path: 'اثر غیرمستقیم', pls: 0.076, mc: 0.0757, ci: '[0.030, 0.133]', sig: 'معنادار', res: 'تأیید', tip: 'نقش میانجی‌گری مدیریت دانش در رابطه استراتژی و موفقیت.' },
+        { h: 'H5', path: 'رهبری ← دانش', pls: 0.342, mc: 0.3415, ci: '[0.224, 0.460]', sig: 'معنادار', res: 'تأیید', tip: 'اثر رهبری تحول دیجیتال بر مدیریت دانش.' },
+        { h: 'H6', path: 'رهبری × استراتژی', pls: 0.071, mc: 0.0714, ci: '[-0.039, 0.179]', sig: 'غیرمعنادار', res: 'رد', tip: 'تعدیل‌گری رهبری در رابطه استراتژی و دانش (در شرایط تحریم تضعیف می‌شود).' },
+        { h: 'H7', path: 'چابکی ← موفقیت', pls: 0.340, mc: 0.3401, ci: '[0.220, 0.461]', sig: 'معنادار', res: 'تأیید', tip: 'اثر مستقیم چابکی استراتژیک بر موفقیت تحول.' },
+        { h: 'H8', path: 'چابکی × دانش', pls: 0.188, mc: 0.1887, ci: '[0.061, 0.316]', sig: 'معنادار', res: 'تأیید', tip: 'تعدیل‌گری چابکی در رابطه دانش و موفقیت.' }
+    ],
+    scenarios: [
+        { name: 'خوش‌بینانه', n: 3333, mean: 0.215, median: 0.220, ci: '[-1.409, 1.876]', tip: 'تحریم و نرخ ارز پایین.' },
+        { name: 'پایه', n: 3334, mean: 0.018, median: 0.027, ci: '[-1.629, 1.714]', tip: 'شرایط اقتصادی متوسط.' },
+        { name: 'بدبینانه', n: 3333, mean: -0.215, median: -0.219, ci: '[-1.912, 1.481]', tip: 'تحریم و نرخ ارز بالا.' }
+    ],
+    h6: [
+        { z: '-2.33', desc: 'تحریم کم', beta: 0.154, ci: '[0.062, 0.246]', sig: 'معنادار (مثبت)', tip: 'در شرایط تحریم پایین، رهبری دیجیتال نقش تعدیل‌گر مثبت دارد.' },
+        { z: '-1.00', desc: 'تحریم متوسط', beta: 0.107, ci: '[0.015, 0.199]', sig: 'معنادار (مثبت)', tip: 'با افزایش تحریم، اثر تعدیل‌گری به سمت صفر میل می‌کند.' },
+        { z: '+0.33', desc: 'تحریم بالا', beta: 0.060, ci: '[-0.033, 0.151]', sig: 'غیرمعنادار', tip: 'در تحریم‌های بالا، اثر رهبری به‌تنهایی کافی نیست.' },
+        { z: '+2.33', desc: 'تحریم شدید', beta: -0.012, ci: '[-0.104, 0.080]', sig: 'غیرمعنادار', tip: 'در شرایط بحرانی، اثر تعدیل‌گر منفی می‌شود.' }
+    ]
+};
+
+function renderMCSummaryTables() {
+    // 1. جدول فرضیه‌ها
+    let hHtml = `<div class="hyp-table-wrap"><table class="hyp-table"><thead><tr>
+        <th>فرضیه</th><th>مسیر</th><th>β (PLS)</th><th>میانگین (MC)</th><th>بازه ۹۵٪</th><th>وضعیت</th><th>نتیجه</th>
+    </tr></thead><tbody>`;
+    MC_TABLES_DATA.hypotheses.forEach(d => {
+        const resCls = d.res === 'تأیید' ? 'hyp-res-confirmed' : 'hyp-res-rejected';
+        const resIcon = d.res === 'تأیید' ? '✓' : '✕';
+        hHtml += `<tr class="hyp-row mc-tooltip-row" data-tooltip="${d.tip}">
+            <td><span class="hyp-id-chip">${d.h}</span></td>
+            <td>${d.path}</td>
+            <td><span class="hyp-beta" style="background:#3498db">${d.pls.toFixed(3)}</span></td>
+            <td><span class="hyp-beta" style="background:#9b59b6">${d.mc.toFixed(4)}</span></td>
+            <td style="direction:ltr; font-family:tahoma">${d.ci}</td>
+            <td><span class="${d.sig === 'معنادار' ? 'hyp-p-sig' : 'hyp-p-ns'}">${d.sig}</span></td>
+            <td><span class="hyp-res ${resCls}"><span class="hyp-res-icon">${resIcon}</span>${d.res}</span></td>
+        </tr>`;
+    });
+    hHtml += `</tbody></table></div>`;
+    const elH = document.getElementById('mc-table-hypotheses');
+    if(elH) elH.innerHTML = hHtml;
+
+    // 2. جدول سناریوها
+    let sHtml = `<div class="hyp-table-wrap"><table class="hyp-table"><thead><tr>
+        <th>سناریو</th><th>تعداد (N)</th><th>میانگین موفقیت</th><th>میانه (P50)</th><th>بازه ۹۰٪</th>
+    </tr></thead><tbody>`;
+    MC_TABLES_DATA.scenarios.forEach(d => {
+        sHtml += `<tr class="hyp-row mc-tooltip-row" data-tooltip="${d.tip}">
+            <td><strong>${d.name}</strong></td>
+            <td>${d.n.toLocaleString()}</td>
+            <td><span class="hyp-beta" style="background:${d.mean>0?'#27ae60':'#e74c3c'}">${d.mean.toFixed(3)}</span></td>
+            <td>${d.median.toFixed(3)}</td>
+            <td style="direction:ltr; font-family:tahoma">${d.ci}</td>
+        </tr>`;
+    });
+    sHtml += `</tbody></table></div>`;
+    const elS = document.getElementById('mc-table-scenarios');
+    if(elS) elS.innerHTML = sHtml;
+
+    // 3. جدول H6
+    let h6Html = `<div class="hyp-table-wrap"><table class="hyp-table"><thead><tr>
+        <th>Z-Score تحریم</th><th>وضعیت</th><th>ضریب H6</th><th>بازه ۹۰٪</th><th>نتیجه</th>
+    </tr></thead><tbody>`;
+    MC_TABLES_DATA.h6.forEach(d => {
+        h6Html += `<tr class="hyp-row mc-tooltip-row" data-tooltip="${d.tip}">
+            <td><span class="vif-ind-chip">${d.z}</span></td>
+            <td>${d.desc}</td>
+            <td><span class="hyp-beta" style="background:${d.beta>0?'#27ae60':'#e74c3c'}">${d.beta.toFixed(3)}</span></td>
+            <td style="direction:ltr; font-family:tahoma">${d.ci}</td>
+            <td><span class="${d.sig.includes('معنادار') ? 'hyp-p-sig' : 'hyp-p-ns'}">${d.sig}</span></td>
+        </tr>`;
+    });
+    h6Html += `</tbody></table></div>`;
+    const elH6 = document.getElementById('mc-table-h6');
+    if(elH6) elH6.innerHTML = h6Html;
+
+    // فعال‌سازی تولتیپ
+    bindMCTableTooltips();
+}
+
+function bindMCTableTooltips() {
+    let tooltip = document.getElementById('mc-row-tooltip');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'mc-row-tooltip';
+        tooltip.className = 'table-tooltip';
+        document.body.appendChild(tooltip);
+    }
+    document.querySelectorAll('.mc-tooltip-row').forEach(row => {
+        row.addEventListener('mouseenter', (e) => {
+            tooltip.innerHTML = `<div>${row.dataset.tooltip}</div>`;
+            tooltip.style.display = 'block';
+            if(typeof positionTooltip === 'function') positionTooltip(e, tooltip);
+        });
+        row.addEventListener('mousemove', (e) => {
+            if (tooltip.style.display === 'block' && typeof positionTooltip === 'function') positionTooltip(e, tooltip);
+        });
+        row.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+    });
+}
+/* ================================================================
+   بخش جدید: جداول تفصیلی مونت کارلو (نسخه ضد تداخل)
+   ================================================================ */
+(function() {
+    const MC_TABLES_DATA = {
+        hypotheses: [
+            { h: 'H1', path: 'استراتژی ← دانش', pls: 0.281, mc: 0.2809, ci: '[0.163, 0.400]', sig: 'معنادار', res: 'تأیید', tip: 'اثر مستقیم استراتژی دیجیتال بر مدیریت دانش.' },
+            { h: 'H2', path: 'استراتژی ← موفقیت', pls: 0.241, mc: 0.2419, ci: '[0.117, 0.366]', sig: 'معنادار', res: 'تأیید', tip: 'اثر مستقیم استراتژی دیجیتال بر موفقیت تحول.' },
+            { h: 'H3', path: 'دانش ← موفقیت', pls: 0.270, mc: 0.2691, ci: '[0.130, 0.409]', sig: 'معنادار', res: 'تأیید', tip: 'اثر مستقیم مدیریت دانش بر موفقیت تحول.' },
+            { h: 'H4', path: 'اثر غیرمستقیم', pls: 0.076, mc: 0.0757, ci: '[0.030, 0.133]', sig: 'معنادار', res: 'تأیید', tip: 'نقش میانجی‌گری مدیریت دانش در رابطه استراتژی و موفقیت.' },
+            { h: 'H5', path: 'رهبری ← دانش', pls: 0.342, mc: 0.3415, ci: '[0.224, 0.460]', sig: 'معنادار', res: 'تأیید', tip: 'اثر رهبری تحول دیجیتال بر مدیریت دانش.' },
+            { h: 'H6', path: 'رهبری × استراتژی', pls: 0.071, mc: 0.0714, ci: '[-0.039, 0.179]', sig: 'غیرمعنادار', res: 'رد', tip: 'تعدیل‌گری رهبری در رابطه استراتژی و دانش (در شرایط تحریم تضعیف می‌شود).' },
+            { h: 'H7', path: 'چابکی ← موفقیت', pls: 0.340, mc: 0.3401, ci: '[0.220, 0.461]', sig: 'معنادار', res: 'تأیید', tip: 'اثر مستقیم چابکی استراتژیک بر موفقیت تحول.' },
+            { h: 'H8', path: 'چابکی × دانش', pls: 0.188, mc: 0.1887, ci: '[0.061, 0.316]', sig: 'معنادار', res: 'تأیید', tip: 'تعدیل‌گری چابکی در رابطه دانش و موفقیت.' }
+        ],
+        scenarios: [
+            { name: 'خوش‌بینانه', n: 3333, mean: 0.215, median: 0.220, ci: '[-1.409, 1.876]', tip: 'تحریم و نرخ ارز پایین.' },
+            { name: 'پایه', n: 3334, mean: 0.018, median: 0.027, ci: '[-1.629, 1.714]', tip: 'شرایط اقتصادی متوسط.' },
+            { name: 'بدبینانه', n: 3333, mean: -0.215, median: -0.219, ci: '[-1.912, 1.481]', tip: 'تحریم و نرخ ارز بالا.' }
+        ],
+        h6: [
+            { z: '-2.33', desc: 'تحریم کم', beta: 0.154, ci: '[0.062, 0.246]', sig: 'معنادار (مثبت)', tip: 'در شرایط تحریم پایین، رهبری دیجیتال نقش تعدیل‌گر مثبت دارد.' },
+            { z: '-1.00', desc: 'تحریم متوسط', beta: 0.107, ci: '[0.015, 0.199]', sig: 'معنادار (مثبت)', tip: 'با افزایش تحریم، اثر تعدیل‌گری به سمت صفر میل می‌کند.' },
+            { z: '+0.33', desc: 'تحریم بالا', beta: 0.060, ci: '[-0.033, 0.151]', sig: 'غیرمعنادار', tip: 'در تحریم‌های بالا، اثر رهبری به‌تنهایی کافی نیست.' },
+            { z: '+2.33', desc: 'تحریم شدید', beta: -0.012, ci: '[-0.104, 0.080]', sig: 'غیرمعنادار', tip: 'در شرایط بحرانی، اثر تعدیل‌گر منفی می‌شود.' }
+        ]
+    };
+
+    function renderMCSummaryTables() {
+        // 1. جدول فرضیه‌ها
+        let hHtml = `<div class="hyp-table-wrap"><table class="hyp-table"><thead><tr>
+            <th>فرضیه</th><th>مسیر</th><th>β (PLS)</th><th>میانگین (MC)</th><th>بازه ۹۵٪</th><th>وضعیت</th><th>نتیجه</th>
+        </tr></thead><tbody>`;
+        MC_TABLES_DATA.hypotheses.forEach(d => {
+            const resCls = d.res === 'تأیید' ? 'hyp-res-confirmed' : 'hyp-res-rejected';
+            const resIcon = d.res === 'تأیید' ? '✓' : '✕';
+            hHtml += `<tr class="hyp-row mc-tooltip-row" data-tooltip="${d.tip}">
+                <td><span class="hyp-id-chip">${d.h}</span></td>
+                <td>${d.path}</td>
+                <td><span class="hyp-beta" style="background:#3498db">${d.pls.toFixed(3)}</span></td>
+                <td><span class="hyp-beta" style="background:#9b59b6">${d.mc.toFixed(4)}</span></td>
+                <td style="direction:ltr; font-family:tahoma">${d.ci}</td>
+                <td><span class="${d.sig === 'معنادار' ? 'hyp-p-sig' : 'hyp-p-ns'}">${d.sig}</span></td>
+                <td><span class="hyp-res ${resCls}"><span class="hyp-res-icon">${resIcon}</span>${d.res}</span></td>
+            </tr>`;
+        });
+        hHtml += `</tbody></table></div>`;
+        const elH = document.getElementById('mc-table-hypotheses');
+        if(elH) elH.innerHTML = hHtml;
+
+        // 2. جدول سناریوها
+        let sHtml = `<div class="hyp-table-wrap"><table class="hyp-table"><thead><tr>
+            <th>سناریو</th><th>تعداد (N)</th><th>میانگین موفقیت</th><th>میانه (P50)</th><th>بازه ۹۰٪</th>
+        </tr></thead><tbody>`;
+        MC_TABLES_DATA.scenarios.forEach(d => {
+            sHtml += `<tr class="hyp-row mc-tooltip-row" data-tooltip="${d.tip}">
+                <td><strong>${d.name}</strong></td>
+                <td>${d.n.toLocaleString()}</td>
+                <td><span class="hyp-beta" style="background:${d.mean>0?'#27ae60':'#e74c3c'}">${d.mean.toFixed(3)}</span></td>
+                <td>${d.median.toFixed(3)}</td>
+                <td style="direction:ltr; font-family:tahoma">${d.ci}</td>
+            </tr>`;
+        });
+        sHtml += `</tbody></table></div>`;
+        const elS = document.getElementById('mc-table-scenarios');
+        if(elS) elS.innerHTML = sHtml;
+
+        // 3. جدول H6
+        let h6Html = `<div class="hyp-table-wrap"><table class="hyp-table"><thead><tr>
+            <th>Z-Score تحریم</th><th>وضعیت</th><th>ضریب H6</th><th>بازه ۹۰٪</th><th>نتیجه</th>
+        </tr></thead><tbody>`;
+        MC_TABLES_DATA.h6.forEach(d => {
+            h6Html += `<tr class="hyp-row mc-tooltip-row" data-tooltip="${d.tip}">
+                <td><span class="vif-ind-chip">${d.z}</span></td>
+                <td>${d.desc}</td>
+                <td><span class="hyp-beta" style="background:${d.beta>0?'#27ae60':'#e74c3c'}">${d.beta.toFixed(3)}</span></td>
+                <td style="direction:ltr; font-family:tahoma">${d.ci}</td>
+                <td><span class="${d.sig.includes('معنادار') ? 'hyp-p-sig' : 'hyp-p-ns'}">${d.sig}</span></td>
+            </tr>`;
+        });
+        h6Html += `</tbody></table></div>`;
+        const elH6 = document.getElementById('mc-table-h6');
+        if(elH6) elH6.innerHTML = h6Html;
+
+        // فعال‌سازی تولتیپ
+        bindMCTableTooltips();
+    }
+
+    function bindMCTableTooltips() {
+        let tooltip = document.getElementById('mc-row-tooltip');
+        if (!tooltip) {
+            tooltip = document.createElement('div');
+            tooltip.id = 'mc-row-tooltip';
+            tooltip.className = 'table-tooltip';
+            document.body.appendChild(tooltip);
+        }
+        document.querySelectorAll('.mc-tooltip-row').forEach(row => {
+            row.addEventListener('mouseenter', (e) => {
+                tooltip.innerHTML = `<div>${row.dataset.tooltip}</div>`;
+                tooltip.style.display = 'block';
+                if(typeof positionTooltip === 'function') positionTooltip(e, tooltip);
+            });
+            row.addEventListener('mousemove', (e) => {
+                if (tooltip.style.display === 'block' && typeof positionTooltip === 'function') positionTooltip(e, tooltip);
+            });
+            row.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+        });
+    }
+
+    // اتصال دکمه به صورت مستقل
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            const mcTableBtn = document.querySelector('.nav-btn[data-page="mc-summary-tables"]');
+            if (mcTableBtn) {
+                mcTableBtn.addEventListener('click', function() {
+                    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    const targetPage = document.getElementById('page-mc-summary-tables');
+                    if(targetPage) targetPage.classList.add('active');
+                    
+                    renderMCSummaryTables();
+                });
+            }
+        }, 500);
+    });
+})();
